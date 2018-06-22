@@ -216,7 +216,7 @@
         var html = "<textarea id='sparql-query-text' class='form-control'></textarea>";
         jQuery('#client-frontend-query-area').append(html);
         this.yasqe = YASQE.fromTextArea(document.getElementById('sparql-query-text'));
-        this.yasqe.setValue('SELECT * WHERE {\n\t?v0 <http://purl.org/goodrelations/includes> ?v1 .\n\t?v1 <http://schema.org/contentSize> ?v3 .\n\t?v0 <http://schema.org/eligibleRegion> <http://db.uwaterloo.ca/~galuc/wsdbm/Country9>.\n}');
+        this.yasqe.setValue('prefix dbpedia-owl: <http://dbpedia.org/ontology/>\nprefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n\nSELECT ?movie ?title ?name\nWHERE {\n ?movie dbpedia-owl:starring [ rdfs:label "Brad Pitt"@en ];\n\t\trdfs:label ?title;\n\t\tdbpedia-owl:director [ rdfs:label ?name ].\n FILTER LANGMATCHES(LANG(?title), "EN")\n FILTER LANGMATCHES(LANG(?name),  "EN")\n}');
 
     };
 
