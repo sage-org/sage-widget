@@ -24580,11 +24580,22 @@ fixString = function(query){
     var elem = splitted[i];
     if (elem === "a") {}
     else if (elem.indexOf('<') > -1 && elem.indexOf('>') > -1) {
-      var before = elem.slice(0,elem.indexOf('<')).toUpperCase();
-      var uri = elem.slice(elem.indexOf('<'),elem.indexOf('>'));
-      var after = elem.slice(elem.indexOf('>')).toUpperCase();
-      var newElem = before + uri + after;
-      splitted[i] = newElem;
+      if (elem[elem.indexOf(">")+1] ==="\"" || elem[elem.indexOf(">")+1] ==="\'") {
+        var before = elem.slice(0,elem.indexOf('<')).toUpperCase();
+        var uri = elem.slice(elem.indexOf('<'),elem.indexOf('>'));
+        var after = elem.slice(elem.indexOf('>'));
+        var newElem = before + uri + after;
+        splitted[i] = newElem;
+      }
+      else {
+        var before = elem.slice(0,elem.indexOf('<')).toUpperCase();
+        var uri = elem.slice(elem.indexOf('<'),elem.indexOf('>'));
+        var after = elem.slice(elem.indexOf('>')).toUpperCase();
+        var newElem = before + uri + after;
+        splitted[i] = newElem;
+      }
+    }
+    else if (elem.indexOf("\"") > -1) {
     }
     else if (elem.indexOf('?') > -1) {
       var vars = elem.split("?");
@@ -24614,6 +24625,10 @@ QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, 
         }
         queryString = Utils.normalizeUnicodeLiterals(queryString);
         queryString = fixString(queryString);
+        queryString = queryString.replace(/"(.*)@[A-Za-z]\w+/g, function (x) {
+          x = "'" + x + "'";
+          return x;
+        });
         var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
         console.log("Tree :");
         console.log(syntaxTree);
@@ -27939,7 +27954,12 @@ cleanerBGP = function(bgp,env){
     else if (tp.subject.token === "var") {
       tp.subject = "?" + tp.subject.value;
     }
+    else if (tp.subject.token === "blank") {
+      var newVal = tp.subject.value.replace("_:","?");
+      tp.subject = newVal;
+    }
     else {
+      console.log(tp);
       console.error("Unexpected tp token");
     }
 
@@ -27959,7 +27979,12 @@ cleanerBGP = function(bgp,env){
     else if (tp.predicate.token === "var") {
       tp.predicate = "?" + tp.predicate.value;
     }
+    else if (tp.predicate.token === "blank") {
+      var newVal = tp.predicate.value.replace("_:","?");
+      tp.predicate = newVal;
+    }
     else {
+      console.log(tp);
       console.error("Unexpected tp token");
     }
 
@@ -27979,7 +28004,12 @@ cleanerBGP = function(bgp,env){
     else if (tp.object.token === "var") {
       tp.object = "?" + tp.object.value;
     }
+    else if (tp.object.token === "blank") {
+      var newVal = tp.object.value.replace("_:","?");
+      tp.object = newVal;
+    }
     else {
+      console.log(tp);
       console.error("Unexpected tp token");
     }
 
