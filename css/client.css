@@ -27,3 +27,7 @@ textarea{
 #btn-next{
   text-align: left;
 }
+
+.dropdown-item {
+  cursor : pointer;
+}
