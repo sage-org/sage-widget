@@ -110,10 +110,19 @@
     };
 
     ClientFrontend = function(node,store) {
-        var html = "<div id='client-frontend' class='container'><h1>Sage JS Client</h1><br/>";
+        var html = "<div id='client-frontend' class='container'><h1><i class='fab fa-hubspot'></i> Playground</h1><br/>";
         html = html + "<div id='client-frontend-overlay'></div>"
         html = html + "<div id='client-frontend-server-title'><strong>Server :</strong></div><div id='client-frontend-server-area'></div>";
-        html = html + "<div id='client-frontend-query-title'><strong>Query :</strong></div><div id='client-frontend-query-area'></div>";
+        html = html + "<div id='client-frontend-query-title'><strong>Query :</strong>\
+        <div class='input-group mb-3 query-list'>\
+        <div class='input-group-prepend'>\
+          <button class='btn btn-outline-secondary dropdown-toggle' type='button' id='dropdownMenuButton' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>Sample Queries</button>\
+          <div class='dropdown-menu' id='queryList'>\
+          </div>\
+        </div>\
+            <input type='text' class='form-control' id='sparql-query-desc-text' disabled/>\
+        </div>\
+        </div><div id='client-frontend-query-area'></div>";
         html = html + "<div id='client-frontend-menu'></div><br/>";
         html = html + "<div id='client-frontend-results-area' class='table-responsive'></div>";
         html = html + "<div id='client-frontend-footer'>";
@@ -216,7 +225,6 @@
         var html = "<textarea id='sparql-query-text' class='form-control'></textarea>";
         jQuery('#client-frontend-query-area').append(html);
         this.yasqe = YASQE.fromTextArea(document.getElementById('sparql-query-text'));
-        this.yasqe.setValue('prefix dbpedia-owl: <http://dbpedia.org/ontology/>\nprefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n\nSELECT ?movie ?title ?name\nWHERE {\n ?movie dbpedia-owl:starring [ rdfs:label "Brad Pitt"@en ];\n\t\trdfs:label ?title;\n\t\tdbpedia-owl:director [ rdfs:label ?name ].\n FILTER LANGMATCHES(LANG(?title), "EN")\n FILTER LANGMATCHES(LANG(?name),  "EN")\n}');
 
     };
 
