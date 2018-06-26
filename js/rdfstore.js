@@ -24674,7 +24674,6 @@ QueryEngine.prototype.executeQuery = function(syntaxTree, callback, defaultDatas
 
     // retrieval queries can only have 1 executable unit
     var aqt = that.abstractQueryTree.parseExecutableUnit(units[0]);
-    queryEnv.tree = aqt;
 
     // can be anything else but a select???
     if(aqt.kind === 'select') {
