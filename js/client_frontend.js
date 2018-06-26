@@ -204,7 +204,7 @@
 
     ClientFrontend.prototype.buildMenu = function() {
         var html = "<div id='rdf-store-menu'>";
-        html = html + "<div id='rdf-store-menu-run' class='rdf-store-menu-action'><button type='button' class='btn btn-primary' href='#' data-bind='click:submitQuery'>Execute</button>&nbsp;&nbsp;&nbsp;<button type='button' id='loadingBtn' class='btn btn-warning' href='#' disabled><i class='fas fa-sync fa-spin'></i>&nbsp;&nbsp;Loading</button></div>";
+        html = html + "<div id='rdf-store-menu-run' class='rdf-store-menu-action'><button type='button' class='btn btn-primary' href='#' data-bind='click:submitQuery'>Execute</button>&nbsp;&nbsp;&nbsp;<button type='button' id='loadingBtn' class='btn btn-warning' href='#' disabled><i class='fas fa-sync fa-spin'></i>&nbsp;&nbsp;Loading</button><span id='timer'></span></div>";
         jQuery('#client-frontend-menu').append(html);
         jQuery('#loadingBtn').hide();
     };
@@ -440,8 +440,11 @@
             jQuery('#client-frontend-next-image-placeholder').hide();
             jQuery('#client-frontend-prev-image-placeholder').hide();
             var that = this;
+            var t0 = null;
             var callback = function(err,results){
                 if(!err) {
+                    var t1 = performance.now();
+                    jQuery('#timer')[0].innerText = "Execution time : " + (t1 - t0) + " ms";
                     if(that.lastQuery == null) {
                         that.lastQuery = query;
                         that.modified = false;
@@ -460,6 +463,7 @@
                     alert("Error executing query: "+results);
                 }
             };
+            t0 = performance.now();
             this.store.execute(query, callback, server);
             jQuery('#loadingBtn').show();
         },

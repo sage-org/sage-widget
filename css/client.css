@@ -31,3 +31,7 @@ textarea{
 .dropdown-item {
   cursor : pointer;
 }
+
+#timer{
+  margin-left: 0.5%;
+}
