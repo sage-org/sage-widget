@@ -24674,6 +24674,7 @@ QueryEngine.prototype.executeQuery = function(syntaxTree, callback, defaultDatas
 
     // retrieval queries can only have 1 executable unit
     var aqt = that.abstractQueryTree.parseExecutableUnit(units[0]);
+    queryEnv.tree = aqt;
 
     // can be anything else but a select???
     if(aqt.kind === 'select') {
@@ -24836,17 +24837,31 @@ QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedD
                             }
                         }
                         else if (aggInProj) {
-                          var aggregatedBindings = [];
-                          await that.aggregateBindings(projection, result, dataset, env, function(resultingBindings){
-                            aggregatedBindings.push(resultingBindings);
-                          });
-                          that.applyOrderBy(order, aggregatedBindings, dataset, env, function(orderedBindings){
+
+                          var onlyAggs = true;
+                          for (var i = 0; i < projection.length; i++) {
+                            var proj = projection[i];
+                            if (proj.expression === undefined || proj.expression.expressionType === undefined || proj.expression.expressionType != "aggregate") {
+                              onlyAggs = false;
+                            }
+                          }
+                          if (onlyAggs) {
+                            var aggregatedBindings = [];
+                            env.globalAgg = true;
+                            await that.aggregateBindings(projection, result, dataset, env, function(resultingBindings){
+                              aggregatedBindings.push(resultingBindings);
+                            });
+                            that.applyOrderBy(order, aggregatedBindings, dataset, env, function(orderedBindings){
                               var modifiedBindings = that.applyModifier(modifier, orderedBindings);
                               var limitedBindings = that.applyLimitOffset(offset, limit, modifiedBindings);
                               var filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
 
                               callback(null, {'bindings': filteredBindings, 'denorm': true});
-                          });
+                            });
+                          }
+                          else {
+                            callback(null,[]);
+                          }
                         }
                         else {
                             that.applyOrderBy(order, result, dataset, env, function(orderedBindings){
@@ -26118,7 +26133,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
             } else if(aggregator.expression.aggregateType === 'count') {
                 var distinct = {};
                 var count = 0;
-                if(aggregator.expression.expression === '*') {
+                if(aggregator.expression.expression === '*' || (env.globalAgg != undefined && env.globalAgg)) {
                     if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
                         for(var i=0; i< bindingsGroup.length; i++) {
                             var bindings = bindingsGroup[i];
@@ -28050,7 +28065,7 @@ cleanerBGP = function(bgp,env){
  */
 QueryPlanDPSize.executeBushyTree =  async function(queryPlan, dataset, queryEngine, env, callback) {
 
-  var cleanBGP = cleanerBGP(planToBGP(queryPlan),env);
+var cleanBGP = cleanerBGP(planToBGP(queryPlan),env);
 
   var reqBody = {
   "query": {
@@ -28058,7 +28073,7 @@ QueryPlanDPSize.executeBushyTree =  async function(queryPlan, dataset, queryEngi
     "bgp": cleanBGP
   },
   "next": null
-  }
+  };
   var bindings = await evalBGP(reqBody,env.server);
   console.log("Final bindings :");
   console.log(bindings);
@@ -29467,7 +29482,8 @@ var nextTick = (function () {
  * @returns {*}
  */
 var hashTerm = function(term) {
-    try {
+  return JSON.stringify(term);
+    /*try {
         if(term == null) {
             return "";
         } if(term.token==='uri') {
@@ -29491,7 +29507,7 @@ var hashTerm = function(term) {
             return key;
         }
         return term;
-    }
+    }*/
 };
 
 /**
@@ -29663,7 +29679,8 @@ function guid() {
 }
 
 hashTerm = function(term) {
-    try {
+  return JSON.stringify(term);
+    /*try {
         if(term == null) {
             return "";
         } if(term.token==='uri') {
@@ -29687,7 +29704,7 @@ hashTerm = function(term) {
             return key;
         }
         return term;
-    }
+    }*/
 };
 
 var reject = function(xs,p) {
