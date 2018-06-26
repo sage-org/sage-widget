@@ -28,10 +28,19 @@ textarea{
   text-align: left;
 }
 
+#loadingBtn{
+  margin-left: 2%;
+}
+
 .dropdown-item {
   cursor : pointer;
 }
 
+.metadata{
+  margin-left: 2%;
+  font-size: 1em;
+}
+
 #timer{
-  margin-left: 0.5%;
+  margin-left: 0;
 }

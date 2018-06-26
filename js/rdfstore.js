@@ -17763,30 +17763,10 @@ Store.prototype.registerCustomFunction = function(name, fn) {
  * @param {Function} [callback]
  */
  Store.prototype.execute = function() {
-     if(arguments.length === 4) {
-         this.executeWithEnvironment(arguments[0],
-             arguments[1],
-             arguments[2]);
-     } else if(arguments.length === 5) {
-         this.executeWithEnvironment(arguments[0],
-             arguments[1],
-             arguments[2],
-             arguments[3]);
-     } else {
-
-         var queryString;
-         var callback;
-         var serverURL = arguments[arguments.length - 1];
-         // console.log(arguments);
-         if(arguments.length === 2) {
-             queryString = arguments[0];
-             var callback = function(){};
-         } else if(arguments.length === 3) {
-             queryString = arguments[0];
-             callback = arguments [1];
-         }
-         this.engine.execute(queryString, callback, serverURL);
-     }
+   var queryString = arguments[0];
+   var callback = arguments [1];
+   var serverURL = arguments[2];
+   this.engine.execute(queryString, callback, serverURL);
  };
 
 /**
@@ -24670,6 +24650,7 @@ QueryEngine.prototype.executeQuery = function(syntaxTree, callback, defaultDatas
     // environment for the operation -> base ns, declared ns, etc.
     var queryEnv = {blanks:{}, outCache:{}};
     queryEnv.server = serverURL;
+    queryEnv.metadata = {httpCalls : 0, exportTimeTotal : 0.0, importTimeTotal : 0.0}
     this.registerNsInEnvironment(prologue, queryEnv);
 
     // retrieval queries can only have 1 executable unit
@@ -24680,10 +24661,10 @@ QueryEngine.prototype.executeQuery = function(syntaxTree, callback, defaultDatas
         this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(err, result){
             if(err == null) {
                 if(typeof(result) === 'object' && result.denorm === true) {
-                    callback(null, result['bindings']);
+                    callback(null, result['bindings'],queryEnv.metadata);
                 } else {
                     that.denormalizeBindingsList(result, queryEnv, function(result){
-                        callback(null, result);
+                        callback(null, result,queryEnv.metadata);
                     });
                 }
             } else {
@@ -24695,9 +24676,9 @@ QueryEngine.prototype.executeQuery = function(syntaxTree, callback, defaultDatas
         this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(err, result){
             if(err == null) {
                 if(result.length>0) {
-                    callback(null, true);
+                    callback(null, true,queryEnv.metadata);
                 } else {
-                    callback(null, false);
+                    callback(null, false,queryEnv.metadata);
                 }
             } else {
                 callback(err);
@@ -24751,7 +24732,7 @@ QueryEngine.prototype.executeQuery = function(syntaxTree, callback, defaultDatas
                                 }
                             }
                             }
-                        callback(null,graph);
+                        callback(null,graph,queryEnv.metadata);
                     } else {
                         callback(new Error("Error denormalizing bindings."));
                     }
@@ -27918,10 +27899,10 @@ QueryPlanDPSize.createJoinTree = function(leftPlan, rightPlan) {
     };
 };
 
-async function evalBGP(body,serv){
+async function evalBGP(body,env){
 
   var newBody = body;
-  const rawResponse = await fetch(serv, {
+  const rawResponse = await fetch(env.server, {
     method: 'POST',
     mode: 'cors',
     headers: {
@@ -27931,14 +27912,17 @@ async function evalBGP(body,serv){
     },
     body: JSON.stringify(body)
   });
+  env.metadata.httpCalls = env.metadata.httpCalls + 1;
   if (rawResponse.status == "400") {
     return [];
   }
   else{
     const content = await rawResponse.json();
+    env.metadata.importTimeTotal = env.metadata.importTimeTotal + content.stats.import;
+    env.metadata.exportTimeTotal = env.metadata.exportTimeTotal + content.stats.export;
     if (content.hasNext) {
       newBody.next = content.next;
-      var nextPage = await evalBGP(newBody,serv);
+      var nextPage = await evalBGP(newBody,env);
       var binds = JSON.parse(JSON.stringify(content.bindings).split("\"?").join("\""));
       var results = binds.concat(nextPage);
     }
@@ -28073,7 +28057,7 @@ var cleanBGP = cleanerBGP(planToBGP(queryPlan),env);
   },
   "next": null
   };
-  var bindings = await evalBGP(reqBody,env.server);
+  var bindings = await evalBGP(reqBody,env);
   console.log("Final bindings :");
   console.log(bindings);
   console.log("\n\n\n");

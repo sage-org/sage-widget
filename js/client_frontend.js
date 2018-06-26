@@ -204,7 +204,7 @@
 
     ClientFrontend.prototype.buildMenu = function() {
         var html = "<div id='rdf-store-menu'>";
-        html = html + "<div id='rdf-store-menu-run' class='rdf-store-menu-action'><button type='button' class='btn btn-primary' href='#' data-bind='click:submitQuery'>Execute</button>&nbsp;&nbsp;&nbsp;<button type='button' id='loadingBtn' class='btn btn-warning' href='#' disabled><i class='fas fa-sync fa-spin'></i>&nbsp;&nbsp;Loading</button><span id='timer'></span></div>";
+        html = html + "<div id='rdf-store-menu-run' class='rdf-store-menu-action'><button type='button' class='btn btn-primary' href='#' data-bind='click:submitQuery'>Execute</button><button type='button' id='loadingBtn' class='btn btn-warning' href='#' disabled><i class='fas fa-sync fa-spin'></i>&nbsp;&nbsp;Loading</button><br/><br/><span class='metadata' id='timer'></span><span class='metadata' id='httpCalls'></span><span class='metadata' id='avgImp'></span><span class='metadata' id='avgExp'></span></div>";
         jQuery('#client-frontend-menu').append(html);
         jQuery('#loadingBtn').hide();
     };
@@ -441,10 +441,15 @@
             jQuery('#client-frontend-prev-image-placeholder').hide();
             var that = this;
             var t0 = null;
-            var callback = function(err,results){
+            var callback = function(err,results,metadata){
                 if(!err) {
                     var t1 = performance.now();
-                    jQuery('#timer')[0].innerText = "Execution time : " + (t1 - t0) + " ms";
+                    jQuery('#timer')[0].innerText = "Execution time: " + (t1 - t0)/1000 + "s";
+                    jQuery('#httpCalls')[0].innerText = "Number of HTTP calls: " + metadata.httpCalls;
+                    var avgImp = Number((metadata.importTimeTotal / metadata.httpCalls).toFixed(4));
+                    var avgExp = Number((metadata.exportTimeTotal / metadata.httpCalls).toFixed(4));
+                    jQuery('#avgImp')[0].innerText = "Average import time: " + avgImp + "ms";
+                    jQuery('#avgExp')[0].innerText = "Average export time: " + avgExp + "ms";
                     if(that.lastQuery == null) {
                         that.lastQuery = query;
                         that.modified = false;
