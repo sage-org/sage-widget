@@ -24674,6 +24674,7 @@ QueryEngine.prototype.executeQuery = function(syntaxTree, callback, defaultDatas
 
     // retrieval queries can only have 1 executable unit
     var aqt = that.abstractQueryTree.parseExecutableUnit(units[0]);
+    queryEnv.tree = aqt;
 
     // can be anything else but a select???
     if(aqt.kind === 'select') {
@@ -24789,7 +24790,7 @@ QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedD
 
         that.normalizeDatasets(dataset.implicit.concat(dataset.named), env, function(){
             try {
-                that.executeSelectUnit(projection, dataset, unit.pattern, env, function (result) {
+                that.executeSelectUnit(projection, dataset, unit.pattern, env, async function (result) {
                     if (result != null) {
                         // detect single group
                         if (unit.group != null && unit.group === "") {
@@ -24804,6 +24805,14 @@ QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedD
                                 unit.group = 'singleGroup';
                             }
                         }
+                        var aggInProj = false;
+                        for (var i = 0; i < projection.length; i++) {
+                          var proj = projection[i];
+                          if (proj.expression != null && proj.expression.expressionType != null && proj.expression.expressionType === "aggregate") {
+                            aggInProj = true;
+                          }
+                        }
+
                         if (unit.group && unit.group != "") {
                             if (that.checkGroupSemantics(unit.group, projection)) {
                                 that.groupSolution(result, unit.group, dataset, env, function(groupedBindings){
@@ -24826,7 +24835,21 @@ QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedD
                             } else {
                                 callback(new Error("Incompatible Group and Projection variables"));
                             }
-                        } else {
+                        }
+                        else if (aggInProj) {
+                          var aggregatedBindings = [];
+                          await that.aggregateBindings(projection, result, dataset, env, function(resultingBindings){
+                            aggregatedBindings.push(resultingBindings);
+                          });
+                          that.applyOrderBy(order, aggregatedBindings, dataset, env, function(orderedBindings){
+                              var modifiedBindings = that.applyModifier(modifier, orderedBindings);
+                              var limitedBindings = that.applyLimitOffset(offset, limit, modifiedBindings);
+                              var filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
+
+                              callback(null, {'bindings': filteredBindings, 'denorm': true});
+                          });
+                        }
+                        else {
                             that.applyOrderBy(order, result, dataset, env, function(orderedBindings){
                                 var projectedBindings = that.projectBindings(projection, orderedBindings, dataset);
                                 var modifiedBindings = that.applyModifier(modifier, projectedBindings);
@@ -28047,7 +28070,7 @@ var cleanBGP = cleanerBGP(planToBGP(queryPlan),env);
   },
   "next": null
   }
-
+  console.log(env);
   var bindings = await evalBGP(reqBody,env.server);
   console.log("Final bindings :");
   console.log(bindings);
