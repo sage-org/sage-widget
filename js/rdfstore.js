@@ -24674,7 +24674,6 @@ QueryEngine.prototype.executeQuery = function(syntaxTree, callback, defaultDatas
 
     // retrieval queries can only have 1 executable unit
     var aqt = that.abstractQueryTree.parseExecutableUnit(units[0]);
-    queryEnv.tree = aqt;
 
     // can be anything else but a select???
     if(aqt.kind === 'select') {
@@ -28050,18 +28049,8 @@ cleanerBGP = function(bgp,env){
  * @returns {*}
  */
 QueryPlanDPSize.executeBushyTree =  async function(queryPlan, dataset, queryEngine, env, callback) {
-  // console.log("\nEnv :");
-// console.log(env);
-// console.log("\nDataset :");
-// console.log(dataset);
-// console.log("\nPlan :");
-// console.log(queryPlan);
 
-var cleanBGP = cleanerBGP(planToBGP(queryPlan),env);
-
-  // console.log("\nClean BGP :");
-  // console.log(cleanBGP);
-  // console.log("\n\n\n\n");
+  var cleanBGP = cleanerBGP(planToBGP(queryPlan),env);
 
   var reqBody = {
   "query": {
@@ -28070,7 +28059,6 @@ var cleanBGP = cleanerBGP(planToBGP(queryPlan),env);
   },
   "next": null
   }
-  console.log(env);
   var bindings = await evalBGP(reqBody,env.server);
   console.log("Final bindings :");
   console.log(bindings);
