@@ -520,7 +520,7 @@ const { BufferedIterator } = require('asynciterator')
  * @author Thomas Minier
  */
 class BGPOperator extends BufferedIterator {
-  constructor (bgp, url, request) {
+  constructor (bgp, options, request) {
     super()
     this._bgp = []
     this._next = null;
@@ -529,7 +529,8 @@ class BGPOperator extends BufferedIterator {
       var tripleFixed = JSON.parse(JSON.stringify(triple).replace("\"_:","\"?"));
       this._bgp.push(tripleFixed)
     })
-    this._url = url
+    this._url = options.server
+    this._metadata = options.metadata
     this._bufferedValues = []
     this._httpClient = request
       .defaults({
@@ -586,6 +587,9 @@ class BGPOperator extends BufferedIterator {
           // update overheads
           this._responseTimes.push(res.timings.end)
           this._overheads.push(body.stats.import + body.stats.export)
+          this._metadata.importTotal = this._metadata.importTotal + body.stats.import
+          this._metadata.exportTotal = this._metadata.exportTotal + body.stats.export
+          this._metadata.httpCalls = this._metadata.httpCalls + 1
           if (body.hasNext) {
             this._next = body.next
             this._read(count, done)
@@ -1217,7 +1221,7 @@ ReorderingGraphPatternIterator.prototype._createTransformer = function (bindings
   // Apply the context bindings to the iterator's graph pattern
   var pattern = this._pattern;
   var boundPattern = rdf.applyBindings(bindings, this._pattern), options = this._options;
-  var iter = new BGPIterator(boundPattern,options.server,request);
+  var iter = new BGPIterator(boundPattern,options,request);
   if (Object.keys(bindings).length === 0 && bindings.constructor === Object) {
     return iter;
   }
@@ -1240,7 +1244,7 @@ ReorderingGraphPatternIterator.prototype._createTransformer = function (bindings
   function createPipeline(triplePattern) {
     // Create the iterator for the triple pattern
     var startIterator = AsyncIterator.single(bindings),
-        pipeline = new BGPIterator(triplePattern,options.server,request);
+        pipeline = new BGPIterator(triplePattern,options,request);
     // If the chosen subpattern has more triples, create a ReorderingGraphPatternIterator for it
     if (subPattern && subPattern.length !== 0)
       pipeline = new ReorderingGraphPatternIterator(pipeline, subPattern, options);

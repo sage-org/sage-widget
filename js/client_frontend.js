@@ -450,9 +450,13 @@
             this.totalResults(0);
             this.totalResultPages(0);
             this.currentResultPage(0);
+            var metadata = {
+              httpCalls : 0,
+              importTotal : 0.0,
+              exportTotal : 0.0
+            }
 
-
-            results = new sage.SparqlIterator(query, {server:server});
+            results = new sage.SparqlIterator(query, {server:server, metadata : metadata});
             results.on('data',function(res){
               for (var variable in res) {
                 if (res[variable] === null) {
@@ -460,6 +464,9 @@
                 }
               }
               that.allBindings().push(res);
+              var t1 = performance.now();
+              var execTime = Number(((t1 - t0)/1000).toFixed(4));
+              jQuery('#timer')[0].innerText = "Execution time: " + execTime + "s";
               that.bindings(that.allBindings().slice(0,that.bindingsPerPage()));
               that.totalResultPages(Math.ceil(that.allBindings().length/that.bindingsPerPage()));
               that.totalResults(that.allBindings().length);
@@ -474,11 +481,27 @@
               var t1 = performance.now();
               var execTime = Number(((t1 - t0)/1000).toFixed(4));
               jQuery('#timer')[0].innerText = "Execution time: " + execTime + "s";
-              /*jQuery('#httpCalls')[0].innerText = "Number of HTTP calls: " + metadata.httpCalls;
-              var avgImp = Number((metadata.importTimeTotal / metadata.httpCalls).toFixed(4));
-              var avgExp = Number((metadata.exportTimeTotal / metadata.httpCalls).toFixed(4));
+              var found = false;
+              var metadata = null;
+              var currIter = results;
+              while (metadata == null) {
+                if (currIter._options != null && currIter._options.metadata != null) {
+                  metadata = currIter._options.metadata;
+                }
+                else {
+                  if (currIter._source != null) {
+                    currIter = currIter._source;
+                  }
+                  else {
+                    metadata = {httpCalls : "Error", importTotal : "Error", exportTotal : "Error"}
+                  }
+                }
+              }
+              jQuery('#httpCalls')[0].innerText = "Number of HTTP calls: " + metadata.httpCalls;
+              var avgImp = Number((metadata.importTotal / metadata.httpCalls).toFixed(4));
+              var avgExp = Number((metadata.exportTotal / metadata.httpCalls).toFixed(4));
               jQuery('#avgImp')[0].innerText = "Average import time: " + avgImp + "ms";
-              jQuery('#avgExp')[0].innerText = "Average export time: " + avgExp + "ms";*/
+              jQuery('#avgExp')[0].innerText = "Average export time: " + avgExp + "ms";
             })
             jQuery('#loadingBtn').show();
         },
