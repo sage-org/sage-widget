@@ -444,7 +444,8 @@
             var callback = function(err,results,metadata){
                 if(!err) {
                     var t1 = performance.now();
-                    jQuery('#timer')[0].innerText = "Execution time: " + (t1 - t0)/1000 + "s";
+                    var execTime = Number(((t1 - t0)/1000).toFixed(4));
+                    jQuery('#timer')[0].innerText = "Execution time: " + execTime + "s";
                     jQuery('#httpCalls')[0].innerText = "Number of HTTP calls: " + metadata.httpCalls;
                     var avgImp = Number((metadata.importTimeTotal / metadata.httpCalls).toFixed(4));
                     var avgExp = Number((metadata.exportTimeTotal / metadata.httpCalls).toFixed(4));
