@@ -109,7 +109,7 @@
         return this;
     };
 
-    ClientFrontend = function(node,store) {
+    ClientFrontend = function(node,store,sage) {
         var html = "<div id='client-frontend' class='container'><h1><i class='fab fa-hubspot'></i> Playground</h1><br/>";
         html = html + "<div id='client-frontend-overlay'></div>"
         html = html + "<div id='client-frontend-server-title'><strong>Server :</strong></div><div id='client-frontend-server-area'></div>";
@@ -128,7 +128,7 @@
         html = html + "<div id='client-frontend-footer'>";
         html = html + "<table class='table table-borderless'><tr>";
         html = html + "<td id='btn-prev'><button id='client-frontend-prev-image-placeholder' class='btn btn-primary' data-bind='click:prevResultPage'>\<</button></td>";
-        html = html + "<td id='lbl-pages'><label class='rdfstore-footer-info' id='client-frontend-footer-display-pages' data-bind='text:\"Page \"+currentResultPage()+\"/\"+totalResultPages()+\", (\"+allBindings().length+\" results)\"'></label></td>";
+        html = html + "<td id='lbl-pages'><label class='rdfstore-footer-info' id='client-frontend-footer-display-pages' data-bind='text:\"Page \"+currentResultPage()+\"/\"+totalResultPages()+\", (\"+totalResults()+\" results)\"'></label></td>";
         html = html + "<td 'btn-next'><button id='client-frontend-next-image-placeholder' class='btn btn-primary' data-bind=' click:nextResultPage'>\></button></td>";
         html = html + "</tr></table>";
         html = html + "</div>";
@@ -185,14 +185,14 @@
     ClientFrontend.prototype.buildTemplates = function(node) {
 
         html = "<script id='sparql-results-template' type='text/html'><table id='sparql-results-table-headers' class='table table-striped table-hover'><thead><tr>{{each bindingsVariables}}";
-        html = html + "<th scope='col'>\?${$value}</th>{{/each}}</tr></thead><tbody>{{each bindingsArray}}";
+        html = html + "<th scope='col'>\${$value}</th>{{/each}}</tr></thead><tbody>{{each bindingsArray}}";
         html = html + "<tr class='{{if $index%2==0}}sparql-result-even-row{{else}}sparql-result-odd-row{{/if}}'>{{each $value }}{{if $value.token==='uri'}}";
-        html = html + "<td data-bind='click: newShowBinding, event: {mouseover: tdMouseOver}'><span class='rdfstore-data-value'>${$value.value}</span>";
+        html = html + "<td data-bind='click: newShowBinding, event: {mouseover: tdMouseOver}'><span class='rdfstore-data-value'>${$value}</span>";
         html = html + "<span class='rdfstore-data-token' style='display:none'>uri</span></td>{{else}}{{if $value.token==='literal'}}";
-        html = html + "<td data-bind='click: newShowBinding, event: {mouseover: tdMouseOver}'><span class='rdfstore-data-value'>${$value.value}</span>";
+        html = html + "<td data-bind='click: newShowBinding, event: {mouseover: tdMouseOver}'><span class='rdfstore-data-value'>${$value}</span>";
         html = html + "<span class='rdfstore-data-token' style='display:none'>literal</span><span class='rdfstore-data-lang'  style='display:none'>${$value.lang}</span>";
         html = html + "<span class='rdfstore-data-type'  style='display:none'>${$value.type}</span></td>{{else}}<td data-bind='click: newShowBinding, event: {mouseover: tdMouseOver}'>";
-        html = html + "<span class='rdfstore-data-value'>${$value.value}</span><span class='rdfstore-data-token' style='display:none'>blank</span></td>";
+        html = html + "<span class='rdfstore-data-value'>${$value}</span><span class='rdfstore-data-token' style='display:none'>blank</span></td>";
         html = html + "{{/if}}{{/if}}{{/each}}</tr>{{/each}}</tbody></table></script>";
 
         jQuery(node).append(html);
@@ -377,6 +377,8 @@
 
          bindings: ko.observable([]),
 
+         totalResults: ko.observable(0),
+
          totalResultPages: ko.observable(0),
 
          currentResultPage: ko.observable(0),
@@ -440,37 +442,44 @@
             jQuery('#client-frontend-next-image-placeholder').hide();
             jQuery('#client-frontend-prev-image-placeholder').hide();
             var that = this;
-            var t0 = null;
-            var callback = function(err,results,metadata){
-                if(!err) {
-                    var t1 = performance.now();
-                    var execTime = Number(((t1 - t0)/1000).toFixed(4));
-                    jQuery('#timer')[0].innerText = "Execution time: " + execTime + "s";
-                    jQuery('#httpCalls')[0].innerText = "Number of HTTP calls: " + metadata.httpCalls;
-                    var avgImp = Number((metadata.importTimeTotal / metadata.httpCalls).toFixed(4));
-                    var avgExp = Number((metadata.exportTimeTotal / metadata.httpCalls).toFixed(4));
-                    jQuery('#avgImp')[0].innerText = "Average import time: " + avgImp + "ms";
-                    jQuery('#avgExp')[0].innerText = "Average export time: " + avgExp + "ms";
-                    if(that.lastQuery == null) {
-                        that.lastQuery = query;
-                        that.modified = false;
-                    }
+            var t0 = performance.now();
 
-                    that.allBindings(results || []);
-                    that.bindings(results.slice(0,that.bindingsPerPage()));
-                    that.totalResultPages(Math.ceil(results.length/that.bindingsPerPage()))
-                    that.currentResultPage(1);
-                    var maxPages = Math.ceil(that.allBindings().length / that.bindingsPerPage());
-                    if (maxPages>1) {
-                      that.toggleNextPage();
-                    }
-                    jQuery('#loadingBtn').hide();
-                } else {
-                    alert("Error executing query: "+results);
+            //this.store.execute(query, callback, server);
+            this.allBindings([]);
+            this.bindings([]);
+            this.totalResults(0);
+            this.totalResultPages(0);
+            this.currentResultPage(0);
+
+
+            results = new sage.SparqlIterator(query, {server:server});
+            results.on('data',function(res){
+              for (var variable in res) {
+                if (res[variable] === null) {
+                  res[variable] = "null";
                 }
-            };
-            t0 = performance.now();
-            this.store.execute(query, callback, server);
+              }
+              that.allBindings().push(res);
+              that.bindings(that.allBindings().slice(0,that.bindingsPerPage()));
+              that.totalResultPages(Math.ceil(that.allBindings().length/that.bindingsPerPage()));
+              that.totalResults(that.allBindings().length);
+              that.currentResultPage(1);
+              var maxPages = Math.ceil(that.allBindings().length / that.bindingsPerPage());
+              if (maxPages>1) {
+                jQuery('#client-frontend-next-image-placeholder').show();
+              }
+            });
+            results.on('end',function(){
+              jQuery('#loadingBtn').hide();
+              var t1 = performance.now();
+              var execTime = Number(((t1 - t0)/1000).toFixed(4));
+              jQuery('#timer')[0].innerText = "Execution time: " + execTime + "s";
+              /*jQuery('#httpCalls')[0].innerText = "Number of HTTP calls: " + metadata.httpCalls;
+              var avgImp = Number((metadata.importTimeTotal / metadata.httpCalls).toFixed(4));
+              var avgExp = Number((metadata.exportTimeTotal / metadata.httpCalls).toFixed(4));
+              jQuery('#avgImp')[0].innerText = "Average import time: " + avgImp + "ms";
+              jQuery('#avgExp')[0].innerText = "Average export time: " + avgExp + "ms";*/
+            })
             jQuery('#loadingBtn').show();
         },
 

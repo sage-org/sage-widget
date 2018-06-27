@@ -1204,15 +1204,6 @@ var TriplePatternIterator = require('./TriplePatternIterator');
 
 // Creates a new ReorderingGraphPatternIterator
 function ReorderingGraphPatternIterator(parent, pattern, options) {
-  // Empty patterns have no effect
-  if (!pattern || !pattern.length)
-    return new TransformIterator(parent, options);
-  // A one-element pattern can be solved by a triple pattern iterator
-  if (pattern.length === 1)
-    return new BGPIterator(pattern,options.server,request);
-  // For length two or more, construct a ReorderingGraphPatternIterator
-  if (!(this instanceof ReorderingGraphPatternIterator))
-    return new ReorderingGraphPatternIterator(parent, pattern, options);
   MultiTransformIterator.call(this, parent, options);
 
   this._pattern = pattern;
@@ -1224,46 +1215,23 @@ MultiTransformIterator.subclass(ReorderingGraphPatternIterator);
 // Creates a pipeline with triples matching the binding of the iterator's graph pattern
 ReorderingGraphPatternIterator.prototype._createTransformer = function (bindings) {
   // Apply the context bindings to the iterator's graph pattern
+  var pattern = this._pattern;
   var boundPattern = rdf.applyBindings(bindings, this._pattern), options = this._options;
-  // Select the smallest connected subpattern with the least number of unique variables in the resulting pattern
-  var subPatterns = _.sortBy(rdf.findConnectedPatterns(boundPattern), function (patterns) {
-        var distinctVariableCount = _.union.apply(_, patterns.map(rdf.getVariables)).length;
-        return -(boundPattern.length * distinctVariableCount + patterns.length);
-      }),
-      subPattern = subPatterns.pop(), remainingPatterns = subPattern.length, pipeline;
+  var iter = new BGPIterator(boundPattern,options.server,request);
+  if (Object.keys(bindings).length === 0 && bindings.constructor === Object) {
+    return iter;
+  }
+  else {
+    return iter.map(function (triple) {
+      // Extend the bindings such that they bind the iterator's pattern to the triple.
+      try {
+        return rdf.extendBindings(bindings, pattern, triple); }
+        // If the triple conflicted with the bindings (e.g., non-data triple), skip it.
+        catch (error) {
+          return null; }
+        });
 
-  // If this subpattern has only one triple pattern, use it to create the pipeline
-  if (remainingPatterns === 1)
-    return createPipeline(subPattern.pop());
-
-  // Otherwise, we must first find the best triple pattern to start the pipeline
-  pipeline = new BGPIterator(this._pattern,"http://sage.univ-nantes.fr/sparql/dbpedia-2016-04",request);
-  // Retrieve and inspect the triple patterns' metadata to decide which has least matches
-  var bestIndex = 0, minMatches = Infinity;
-  /*subPattern.forEach(function (triplePattern, index) {
-    var fragment = this._client.getFragmentByPattern(triplePattern);
-    fragment.getProperty('metadata', function (metadata) {
-      // We don't need more data from the fragment
-      fragment.close();
-      // If this triple pattern has no matches, the entire graph pattern has no matches
-      // totalTriples can either be 0 (no matches) or undefined (no count in fragment)
-      if (!metadata.totalTriples)
-        return pipeline.close();
-      // This triple pattern is the best if it has the lowest number of matches
-      if (metadata.totalTriples < minMatches)
-        bestIndex = index, minMatches = metadata.totalTriples;
-      // After all patterns were checked, create the pipeline from the best pattern
-      if (--remainingPatterns === 0)
-        pipeline.source = createPipeline(subPattern.splice(bestIndex, 1)[0]);
-    });
-    // If the fragment errors, pretend it was empty
-    fragment.on('error', function (error) {
-      Logger.warning(error.message);
-      if (!fragment.getProperty('metadata'))
-        fragment.setProperty('metadata', { totalTriples: 0 });
-    });
-  }, this);*/
-  return pipeline;
+  }
 
   // Creates the pipeline of iterators for the bound graph pattern,
   // starting with a TriplePatternIterator for the triple pattern,
@@ -1272,7 +1240,7 @@ ReorderingGraphPatternIterator.prototype._createTransformer = function (bindings
   function createPipeline(triplePattern) {
     // Create the iterator for the triple pattern
     var startIterator = AsyncIterator.single(bindings),
-        pipeline = new BGPIterator(triplePattern,"http://sage.univ-nantes.fr/sparql/dbpedia-2016-04",request);
+        pipeline = new BGPIterator(triplePattern,options.server,request);
     // If the chosen subpattern has more triples, create a ReorderingGraphPatternIterator for it
     if (subPattern && subPattern.length !== 0)
       pipeline = new ReorderingGraphPatternIterator(pipeline, subPattern, options);
@@ -1674,7 +1642,7 @@ var TransformIterator = require('asynciterator').TransformIterator,
  * It performs request pooling and time-based content negotiation.
  * @param {String} [options.request] The HTTP request module to use
  * @param {String} [options.contentType=* / *] The desired content type of representations
- * @param {integer} [options.concurrentRequests=10] Maximum number of concurrent requests per client
+ * @param {integer} [options.concurrentRequests=1] Maximum number of concurrent requests per client
  * @constructor
  */
 function HttpClient(options) {
@@ -1690,7 +1658,7 @@ function HttpClient(options) {
     'accept-datetime': options.datetime && options.datetime.toUTCString(),
   }, _.identity);
   this._logger = options.logger || logger('HttpClient');
-  this._maxActiveRequestCount = options.concurrentRequests || 10;
+  this._maxActiveRequestCount = options.concurrentRequests || 1;
 
   // Set up request queue
   this._requestId = 0;
@@ -2060,33 +2028,19 @@ util.extendBindings = function (bindings, triplePattern, boundTriple) {
   var newBindings = Object.create(null);
   for (var binding in bindings)
     newBindings[binding] = bindings[binding];
-  util.addBinding(newBindings, triplePattern.subject,   boundTriple.subject);
-  util.addBinding(newBindings, triplePattern.predicate, boundTriple.predicate);
-  util.addBinding(newBindings, triplePattern.object,    boundTriple.object);
+  for (var ind in triplePattern) {
+    util.addBinding(newBindings, triplePattern[ind].subject,   boundTriple[triplePattern[ind].subject]);
+    util.addBinding(newBindings, triplePattern[ind].predicate, boundTriple[triplePattern[ind].predicate]);
+    util.addBinding(newBindings, triplePattern[ind].object,    boundTriple[triplePattern[ind].object]);
+  }
   return newBindings;
 };
 
 /** Extends the bindings with a binding that binds the left component to the right. */
 util.addBinding = function (bindings, left, right) {
-  // The left side may be variable; the right side may not
-  if (util.isVariableOrBlank(right))
-    throw new Error('Right-hand side must not be variable.');
-  // If the left one is the variable
-  if (util.isVariableOrBlank(left)) {
-    // Add it to the bindings if it wasn't already bound
-    if (!(left in bindings))
-      bindings[left] = right;
-    // The right-hand side should be consistent with the binding
-    else if (right !== bindings[left]) {
-      throw new Error([
-        'Cannot bind', left, 'to', right,
-        'because it was already bound to', bindings[left] + '.'].join(' '));
-    }
+  if (right != null && util.isVariableOrBlank(left)){
+    bindings[left] = right;
   }
-  // Both are constants, so they should be equal for a successful binding
-  else if (left !== right)
-    throw new Error(['Cannot bind', left, 'to', right].join(' '));
-  // Return the extended bindings
   return bindings;
 };
 
