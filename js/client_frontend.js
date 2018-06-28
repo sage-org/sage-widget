@@ -109,7 +109,7 @@
         return this;
     };
 
-    ClientFrontend = function(node,store,sage) {
+    ClientFrontend = function(node,sage) {
         var html = "<div id='client-frontend' class='container'><h1><i class='fab fa-hubspot'></i> Playground</h1><br/>";
         html = html + "<div id='client-frontend-overlay'></div>"
         html = html + "<div id='client-frontend-server-title'><strong>Server :</strong></div><div id='client-frontend-server-area'></div>";
@@ -150,8 +150,6 @@
         // save the root node
         this.viewModel.rootNode = node;
 
-        // save the store
-        this.viewModel.store = store;
 
         this.viewModel.bindingsVariables = ko.dependentObservable(function(){
                                                                       var array = new Array();
@@ -187,11 +185,11 @@
         html = "<script id='sparql-results-template' type='text/html'><table id='sparql-results-table-headers' class='table table-striped table-hover'><thead><tr>{{each bindingsVariables}}";
         html = html + "<th scope='col'>\${$value}</th>{{/each}}</tr></thead><tbody>{{each bindingsArray}}";
         html = html + "<tr class='{{if $index%2==0}}sparql-result-even-row{{else}}sparql-result-odd-row{{/if}}'>{{each $value }}{{if $value.token==='uri'}}";
-        html = html + "<td data-bind='click: newShowBinding, event: {mouseover: tdMouseOver}'><span class='rdfstore-data-value'>${$value}</span>";
+        html = html + "<td><span class='rdfstore-data-value'>${$value}</span>";
         html = html + "<span class='rdfstore-data-token' style='display:none'>uri</span></td>{{else}}{{if $value.token==='literal'}}";
-        html = html + "<td data-bind='click: newShowBinding, event: {mouseover: tdMouseOver}'><span class='rdfstore-data-value'>${$value}</span>";
+        html = html + "<td><span class='rdfstore-data-value'>${$value}</span>";
         html = html + "<span class='rdfstore-data-token' style='display:none'>literal</span><span class='rdfstore-data-lang'  style='display:none'>${$value.lang}</span>";
-        html = html + "<span class='rdfstore-data-type'  style='display:none'>${$value.type}</span></td>{{else}}<td data-bind='click: newShowBinding, event: {mouseover: tdMouseOver}'>";
+        html = html + "<span class='rdfstore-data-type'  style='display:none'>${$value.type}</span></td>{{else}}<td>";
         html = html + "<span class='rdfstore-data-value'>${$value}</span><span class='rdfstore-data-token' style='display:none'>blank</span></td>";
         html = html + "{{/if}}{{/if}}{{/each}}</tr>{{/each}}</tbody></table></script>";
 
@@ -204,9 +202,19 @@
 
     ClientFrontend.prototype.buildMenu = function() {
         var html = "<div id='rdf-store-menu'>";
-        html = html + "<div id='rdf-store-menu-run' class='rdf-store-menu-action'><button type='button' class='btn btn-primary' href='#' data-bind='click:submitQuery'>Execute</button><button type='button' id='loadingBtn' class='btn btn-warning' href='#' disabled><i class='fas fa-sync fa-spin'></i>&nbsp;&nbsp;Loading</button><br/><br/><span class='metadata' id='timer'></span><span class='metadata' id='httpCalls'></span><span class='metadata' id='avgImp'></span><span class='metadata' id='avgExp'></span></div>";
+        html = html + "<div id='rdf-store-menu-run' class='rdf-store-menu-action'><button type='button' class='btn btn-primary' data-bind='click:submitQuery'>Execute</button><button type='button' id='copyBtn' class='btn btn-secondary' data-bind='click:copyToClipboard'>Copy results to clipboard</button><button type='button' id='loadingBtn' class='btn btn-warning' href='#' disabled><i class='fas fa-sync fa-spin'></i>&nbsp;&nbsp;Loading</button><br/><br/><span class='metadata' id='timer'></span><span class='metadata' id='httpCalls'></span><span class='metadata' id='avgImp'></span><span class='metadata' id='avgExp'></span><span class='metadata' id='avgResp'></span></div>";
         jQuery('#client-frontend-menu').append(html);
         jQuery('#loadingBtn').hide();
+        jQuery('#copyBtn').hide();
+        jQuery('#copyBtn').tooltip({
+          trigger: 'click',
+          placement: 'bottom'
+        });
+        var that = this;
+        jQuery('#copyBtn').on('click', function(e) {
+          that.setTooltip('Copied!');
+          that.hideTooltip();
+        });
     };
 
     ClientFrontend.prototype.buildServerArea = function() {
@@ -233,6 +241,7 @@
         jQuery('#client-frontend-results-area').append(html);
     };
 
+
     ClientFrontend.prototype.showUriDialogModel = {
         create: function(viewModel, value) {
             this.value = value;
@@ -258,6 +267,8 @@
             jQuery("#"+this.id).draggable({handle: "div.rdfstore-dialog-title"});
         },
 
+
+
         closeDialog: function() {
             // modal
             jQuery('#client-frontend-overlay').hide();
@@ -269,12 +280,6 @@
             window.open(this.value, "Browse: "+this.value);
         },
 
-        storeUri: function() {
-            this.closeDialog();
-            this.application.loadGraphDialogModel.create(this.viewModel, this.value);
-            this.application.loadGraphDialogModel.application = this.application;
-            this.application.loadGraphDialogModel.store = this.store;
-        }
 
     };
 
@@ -310,13 +315,6 @@
         browseUri: function() {
             window.open(this.value, "Browse: "+this.value);
         },
-
-        storeUri: function() {
-            this.closeDialog();
-            this.application.loadGraphDialogModel.create(this.viewModel, this.value);
-            this.application.loadGraphDialogModel.application = this.application;
-            this.application.loadGraphDialogModel.store = this.store;
-        }
 
     };
 
@@ -357,6 +355,18 @@
 
 
     };
+
+    ClientFrontend.prototype.setTooltip = function(message) {
+      jQuery('#copyBtn').tooltip('hide')
+      .attr('data-original-title', message)
+      .tooltip('show');
+      }
+
+    ClientFrontend.prototype.hideTooltip = function() {
+      setTimeout(function() {
+      jQuery('#copyBtn').tooltip('hide');
+      }, 1000);
+    }
 
     ClientFrontend.prototype.viewModel = {
          rootNode: null,
@@ -403,20 +413,9 @@
         toggleNextPage: function() {
             jQuery('#client-frontend-next-image-placeholder').toggle();
         },
-        maybeToggleNextPage: function() {
-            if(jQuery("#client-frontend-next-image-placeholder").attr('class') === 'rdfstore-next-image-mousedown') {
-                jQuery("#client-frontend-next-image-placeholder").attr('class','');
-            }
-        },
 
         togglePrevPage: function() {
             jQuery('#client-frontend-prev-image-placeholder').toggle();
-        },
-
-        maybeTogglePrevPage: function() {
-            if(jQuery("#client-frontend-prev-image-placeholder").attr('class') === 'rdfstore-prev-image-mousedown') {
-                jQuery("#client-frontend-prev-image-placeholder").attr('class','');
-            }
         },
 
         nextResultPage: function() {
@@ -436,6 +435,18 @@
             }
         },
 
+        copyToClipboard : function(){
+          const el = document.createElement('textarea');
+          el.value = JSON.stringify(this.allBindings(),null,2);
+          el.setAttribute('readonly', '');
+          el.style.position = 'absolute';
+          el.style.left = '-9999px';
+          document.body.appendChild(el);
+          el.select();
+          document.execCommand('copy');
+          document.body.removeChild(el);
+        },
+
         submitQuery: function() {
             var query = this.application.yasqe.getValue();
             var server = jQuery('#sparql-server-text').val();
@@ -444,7 +455,6 @@
             var that = this;
             var t0 = performance.now();
 
-            //this.store.execute(query, callback, server);
             this.allBindings([]);
             this.bindings([]);
             this.totalResults(0);
@@ -455,8 +465,9 @@
               importTotal : 0.0,
               exportTotal : 0.0
             }
-
-            results = new sage.SparqlIterator(query, {server:server, metadata : metadata});
+            var spy = new sage.Spy();
+            var client = new sage.SageRequestClient(server,spy);
+            results = new sage.SparqlIterator(query, {client});
             results.on('data',function(res){
               for (var variable in res) {
                 if (res[variable] === null) {
@@ -467,6 +478,13 @@
               var t1 = performance.now();
               var execTime = Number(((t1 - t0)/1000).toFixed(4));
               jQuery('#timer')[0].innerText = "Execution time: " + execTime + "s";
+              jQuery('#httpCalls')[0].innerText = "HTTP calls: " + spy.nbHTTPCalls;
+              var avgImp = Number(spy.avgImportTime.toFixed(4));
+              var avgExp = Number(spy.avgExportTime.toFixed(4));
+              var avgResp = Number(spy.avgResponseTime.toFixed(0));
+              jQuery('#avgImp')[0].innerText = "Average import time: " + avgImp + "ms";
+              jQuery('#avgExp')[0].innerText = "Average export time: " + avgExp + "ms";
+              jQuery('#avgResp')[0].innerText = "Average response time: " + avgResp + "ms";
               that.bindings(that.allBindings().slice(0,that.bindingsPerPage()));
               that.totalResultPages(Math.ceil(that.allBindings().length/that.bindingsPerPage()));
               that.totalResults(that.allBindings().length);
@@ -478,86 +496,12 @@
             });
             results.on('end',function(){
               jQuery('#loadingBtn').hide();
-              var t1 = performance.now();
-              var execTime = Number(((t1 - t0)/1000).toFixed(4));
-              jQuery('#timer')[0].innerText = "Execution time: " + execTime + "s";
-              var found = false;
-              var metadata = null;
-              var currIter = results;
-              while (metadata == null) {
-                if (currIter._options != null && currIter._options.metadata != null) {
-                  metadata = currIter._options.metadata;
-                }
-                else {
-                  if (currIter._source != null) {
-                    currIter = currIter._source;
-                  }
-                  else {
-                    metadata = {httpCalls : "Error", importTotal : "Error", exportTotal : "Error"}
-                  }
-                }
-              }
-              jQuery('#httpCalls')[0].innerText = "Number of HTTP calls: " + metadata.httpCalls;
-              var avgImp = Number((metadata.importTotal / metadata.httpCalls).toFixed(4));
-              var avgExp = Number((metadata.exportTotal / metadata.httpCalls).toFixed(4));
-              jQuery('#avgImp')[0].innerText = "Average import time: " + avgImp + "ms";
-              jQuery('#avgExp')[0].innerText = "Average export time: " + avgExp + "ms";
+              jQuery('#copyBtn').show();
             })
             jQuery('#loadingBtn').show();
-        },
+            jQuery('#copyBtn').hide();
+        }
 
-        tdMouseOver: function(event) {
-            jQuery('td.rdfstore-td-over').attr('class','');
-            jQuery(event.currentTarget).attr('class', 'rdfstore-td-over');
-        },
-
-        mouseOverMinWindow: function(event) {
-            var current = jQuery('#rdf-store-min-window').attr('class');
-            if(current.indexOf("rdfstore-window-button-over") == -1) {
-                jQuery('#rdf-store-min-window').attr('class', "rdfstore-window-button rdfstore-window-button-over");
-            } else {
-                jQuery('#rdf-store-min-window').attr('class', "rdfstore-window-button");
-            }
-        },
-
-        mouseOverCloseWindow: function(event) {
-            var current = jQuery('#rdfstore-close-window').attr('class');
-            if(current.indexOf("rdfstore-window-button-over") == -1) {
-                jQuery('#rdfstore-close-window').attr('class', "rdfstore-window-button rdfstore-window-button-over");
-            } else {
-                jQuery('#rdfstore-close-window').attr('class', "rdfstore-window-button");
-            }
-        },
-
-        closeWindow: function() {
-            jQuery("#client-frontend").remove();
-        },
-
-        newShowBinding: function(event) {
-            // modal
-            jQuery('#client-frontend-overlay').show();
-
-            var kind = jQuery(event.currentTarget).find("span.rdfstore-data-token").text()
-            var value = jQuery(event.currentTarget).find("span.rdfstore-data-value").text();
-            if(kind === 'uri') {
-                this.application.showUriDialogModel.create(this, value);
-                this.application.showUriDialogModel.application = this.application;
-                this.application.showUriDialogModel.store = this.store;
-
-            } else if(kind === 'literal') {
-                var lang = jQuery(event.currentTarget).find("span.rdfstore-data-lang").text();
-                var type = jQuery(event.currentTarget).find("span.rdfstore-data-type").text();
-
-                this.application.showLiteralDialogModel.create(this, value, lang, type);
-                this.application.showLiteralDialogModel.application = this.application;
-                this.application.showLiteralDialogModel.store = this.store;
-
-            } else if(kind === 'blank') {
-
-            } else {
-                // wtf?
-            }
-        },
     };
 
     // parsers
