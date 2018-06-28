@@ -1,5 +1,5 @@
 {
-  "name": "sage-client",
+  "name": "sage-widget",
   "version": "1.0.2",
   "description": "Javascript client for Sage SPARQL Engine",
   "main": "js/client_frontend.js",
