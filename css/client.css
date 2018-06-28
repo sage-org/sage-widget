@@ -32,6 +32,10 @@ textarea{
   margin-left: 2%;
 }
 
+#copyBtn{
+  margin-left: 2%;
+}
+
 .dropdown-item {
   cursor : pointer;
 }
