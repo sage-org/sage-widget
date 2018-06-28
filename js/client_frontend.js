@@ -1,114 +1,4 @@
 (function(){
-
-    RDFaParser = {};
-
-    RDFaParser.parseResource = function(resource,blankPrefix, graph, defaultSubject) {
-        var currentUri = jQuery.uri.base().toString();
-        if(currentUri.indexOf("#") != -1) {
-            currentUri = currentUri.split("#")[0];
-        }
-
-        if(resource.type === 'uri') {
-            if(resource.value._string.indexOf(currentUri) != -1) {
-                var suffix = resource.value._string.split(currentUri)[1];
-                var defaultPrefix = defaultSubject.toString();
-                if(suffix != "") {
-                    defaultPrefix = defaultPrefix.split("#")[0]
-                }
-                return {'uri': defaultPrefix+suffix};
-            } else {
-                var uri = resource.value._string;
-                if(uri.indexOf('file:') === 0){
-                    uri = defaultSubject.scheme + '://' + defaultSubject.authority + uri.replace('file:','');
-                }
-                return {'uri': uri};
-            }
-        } else if(resource.type === 'bnode') {
-            var tmp = resource.toString();
-            if(tmp.indexOf("_:")===0) {
-                return {'blank': resource.value + blankPrefix };
-            } else {
-                return {'blank': "_:"+tmp};
-            }
-
-        } else if(resource.type === 'literal') {
-            return {'literal': resource.toString()};
-        }
-    };
-
-    RDFaParser.parseQuad = function(graph, parsed, blankPrefix, defaultSubject) {
-        var quad = {};
-        quad['subject'] = RDFaParser.parseResource(parsed.subject, blankPrefix, graph, defaultSubject);
-        quad['predicate'] = RDFaParser.parseResource(parsed.property, blankPrefix, graph, defaultSubject);
-        quad['object'] = RDFaParser.parseResource(parsed.object, blankPrefix, graph, defaultSubject);
-        quad['graph'] = graph;
-
-        return quad;
-    };
-
-    RDFaParser.parse = function(data, graph, options, callback) {
-        var nsRegExp = /\s*xmlns:(\w*)="([^"]+)"\s*/i;
-        var ns = {};
-
-        // some default attributes
-        ns['og'] = jQuery.uri("http://ogp.me/ns#");
-        ns['fb'] = jQuery.uri("http://www.facebook.com/2008/fbml");
-
-        var baseRegExp  = /\s*xmlns="([^"]+)"\s*/i
-        var baseMatch = baseRegExp.exec(data);
-
-        if(baseMatch != null) {
-            window['rdfaDefaultNS'] = jQuery.uri(baseMatch[1]);
-        }
-
-        var tmp = data;
-        var match = nsRegExp.exec(tmp);
-        var index = null;
-        while(match != null) {
-            ns[match[1]] = jQuery.uri(match[2]);
-            tmp = tmp.slice(match.index+match[0].length, tmp.length);
-            match = nsRegExp.exec(tmp);
-        }
-
-        window['globalNs'] = ns;
-
-        var rdfa = jQuery(data).rdfa();
-        var parsed = rdfa.databank.triples();
-        var quads = [];
-        var prefix = ""+(new Date()).getTime();
-        for(var i=0; i<parsed.length; i++) {
-            quads.push(RDFaParser.parseQuad(graph,parsed[i],prefix, window['rdfaCurrentSubject']));
-        }
-
-        callback(null, quads);
-    };
-
-    // RDFParser
-    RDFParser = {};
-
-    RDFParser.parse = function(data, graph) {
-        var parsed = jQuery().rdf().databank.load(data).triples();
-        var quads = [];
-        var prefix = ""+(new Date()).getTime();
-        for(var i=0; i<parsed.length; i++) {
-            quads.push(RDFaParser.parseQuad(graph,parsed[i],prefix, window['rdfaCurrentSubject']));
-        }
-
-        return quads;
-    };
-
-    jQuery.fn.center = function () {
-        this.css("position","absolute");
-
-        var bounds = jQuery("#client-frontend").position();
-        var height = jQuery("#client-frontend").height();
-        var width = jQuery("#client-frontend").width();
-        this.css("top", ((height - bounds.top) / 2) + $(window).scrollTop() - (this.height()/2) + "px");
-        this.css("left", ((width - bounds.left) / 2) + $(window).scrollLeft() - (this.width()/2) + "px");
-
-        return this;
-    };
-
     ClientFrontend = function(node,sage) {
         var html = "<div id='client-frontend' class='container'><h1><i class='fab fa-hubspot'></i> Playground</h1><br/>";
         html = html + "<div id='client-frontend-overlay'></div>"
@@ -184,18 +74,11 @@
 
         html = "<script id='sparql-results-template' type='text/html'><table id='sparql-results-table-headers' class='table table-striped table-hover'><thead><tr>{{each bindingsVariables}}";
         html = html + "<th scope='col'>\${$value}</th>{{/each}}</tr></thead><tbody>{{each bindingsArray}}";
-        html = html + "<tr class='{{if $index%2==0}}sparql-result-even-row{{else}}sparql-result-odd-row{{/if}}'>{{each $value }}{{if $value.token==='uri'}}";
-        html = html + "<td><span class='rdfstore-data-value'>${$value}</span>";
-        html = html + "<span class='rdfstore-data-token' style='display:none'>uri</span></td>{{else}}{{if $value.token==='literal'}}";
-        html = html + "<td><span class='rdfstore-data-value'>${$value}</span>";
-        html = html + "<span class='rdfstore-data-token' style='display:none'>literal</span><span class='rdfstore-data-lang'  style='display:none'>${$value.lang}</span>";
-        html = html + "<span class='rdfstore-data-type'  style='display:none'>${$value.type}</span></td>{{else}}<td>";
-        html = html + "<span class='rdfstore-data-value'>${$value}</span><span class='rdfstore-data-token' style='display:none'>blank</span></td>";
-        html = html + "{{/if}}{{/if}}{{/each}}</tr>{{/each}}</tbody></table></script>";
+        html = html + "<tr>{{each $value }}";
+        html = html + "<td><span class='rdfstore-data-value'>{{if $value.startsWith('http://') || $value.startsWith('https://')}}<a href=${$value} target='_blank'>${$value}</a>{{else}}${$value}{{/if}}</span>";
+        html = html + "</td>";
+        html = html + "{{/each}}</tr>{{/each}}</tbody></table></script>";
 
-        jQuery(node).append(html);
-
-        html = "<script id='sparql-template-row' type='text/html'><td>${$item.data}</td></script>";
 
         jQuery(node).append(html);
     };
@@ -241,120 +124,6 @@
         jQuery('#client-frontend-results-area').append(html);
     };
 
-
-    ClientFrontend.prototype.showUriDialogModel = {
-        create: function(viewModel, value) {
-            this.value = value;
-            this.viewModel = viewModel;
-            this.id = "rdf-store-menu-show-uri-dialog"+(new Date().getTime());
-            var html = "<div id='"+this.id+"' class='rdf-store-dialog'>";
-            html = html + "<div class='rdfstore-dialog-title'><p>"+value+"</p></div>";
-            html = html + "<div class='rdfstore-dialog-row'><span>URI:</span><input id='rdf-store-show-uri-value' type='text' value='"+value+"'></input></div>";
-            html = html + "<div id='rdfstore-show-uri-row-options' class='rdfstore-options-row'>";
-
-            html = html + "<div class='rdfstore-options-row-item' id='rdf-store-dialog-browse-uri' data-bind='click: browseUri'>browse</div>";
-            html = html + "<div class='rdfstore-options-row-item' id='rdf-store-dialog-browse-store' data-bind='click: storeUri'>load</div>";
-            html = html + "</div>";
-            html = html + "<div class='rdfstore-dialog-actions'>";
-            html = html + "<input type='submit' value='cancel' style='float:none; min-width:100px' data-bind='click:closeDialog'></input>";
-            html = html + "</div>";
-            html = html + "</div>";
-
-            jQuery(viewModel.rootNode).append(html);
-            jQuery("#"+this.id).css("min-height", "280px").css("height", "280px").center();
-
-            ko.applyBindings(this, jQuery("#"+this.id).get(0));
-            jQuery("#"+this.id).draggable({handle: "div.rdfstore-dialog-title"});
-        },
-
-
-
-        closeDialog: function() {
-            // modal
-            jQuery('#client-frontend-overlay').hide();
-
-            jQuery("#"+this.id).remove();
-        },
-
-        browseUri: function() {
-            window.open(this.value, "Browse: "+this.value);
-        },
-
-
-    };
-
-    ClientFrontend.prototype.showLiteralDialogModel = {
-        create: function(viewModel, value, lang, type) {
-            this.value = value;
-            this.viewModel = viewModel;
-            this.id = "rdf-store-menu-show-literal-dialog"+(new Date().getTime());
-            var html = "<div id='"+this.id+"' class='rdf-store-dialog'>";
-            html = html + "<div class='rdfstore-dialog-title'><p>Show Literal</p></div>";
-            html = html + "<div class='rdfstore-dialog-row'><span>Type:</span><input id='rdf-store-show-literal-type' type='text' value='"+type+"'></input></div>";
-            html = html + "<div class='rdfstore-dialog-row'><span>Language:</span><input id='rdf-store-show-literal-language' type='text' value='"+lang+"'></input></div>";
-            html = html + "<div class='rdfstore-dialog-row'><span>Value:</span><textarea id='rdf-store-show-literal-value' type='text'>"+value+"</textarea></div>";
-            html = html + "<div class='rdfstore-dialog-actions' id='rdfstore-dialog-actions-show-literal'>";
-            html = html + "<input type='submit' value='cancel' style='float:none; min-width:100px' data-bind='click:closeDialog'></input>";
-            html = html + "</div>";
-            html = html + "</div>";
-
-            jQuery(viewModel.rootNode).append(html);
-            jQuery("#"+this.id).css("min-height", "380px").css("height", "380px").center();
-
-            ko.applyBindings(this, jQuery("#"+this.id).get(0));
-            jQuery("#"+this.id).draggable({handle: "div.rdfstore-dialog-title"});
-        },
-
-        closeDialog: function() {
-            // modal
-            jQuery('#client-frontend-overlay').hide();
-
-            jQuery("#"+this.id).remove();
-        },
-
-        browseUri: function() {
-            window.open(this.value, "Browse: "+this.value);
-        },
-
-    };
-
-    ClientFrontend.prototype.loadGraphDialogModel = {
-        create: function(viewModel, uriToLoad) {
-            // modal
-            jQuery('#client-frontend-overlay').show();
-
-            this.viewModel = viewModel;
-
-            var html = "<div id='rdf-store-menu-load-dialog' class='rdf-store-dialog'>";
-            html = html + "<div class='rdfstore-dialog-title'>Load remote graph</div>";
-            if(uriToLoad) {
-                html = html + "<div class='rdfstore-dialog-row'><span>Graph to load URI:</span><input id='rdf-store-graph-to-load' type='text' value='"+uriToLoad+"'></input></div>";
-            } else {
-                html = html + "<div class='rdfstore-dialog-row'><span>Graph to load URI:</span><input id='rdf-store-graph-to-load' type='text'></input></div>";
-            }
-            html = html + "<div class='rdfstore-dialog-row'><span>Store graph URI:</span><input id='rdf-store-graph-to-store' type='text'></input></div>";
-            html = html + "<div class='rdfstore-dialog-actions'>";
-            html = html + "<input type='submit' value='cancel' style='float:none; min-width:100px' data-bind='click:closeDialog'></input>";
-            html = html + "</div>";
-            html = html + "</div>";
-
-            jQuery(viewModel.rootNode).append(html);
-            jQuery("#rdf-store-menu-load-dialog").css("min-height", "180px").css("height", "180px").center();
-
-            ko.applyBindings(this, jQuery("#rdf-store-menu-load-dialog").get(0));
-            jQuery("#rdf-store-menu-load-dialog").draggable({handle: "div.rdfstore-dialog-title"});
-        },
-
-        closeDialog: function() {
-            // modal
-            jQuery('#client-frontend-overlay').hide();
-            jQuery("#rdf-store-menu-load-dialog").remove();
-            jQuery("#rdfstore-dialog-load-submit-btn").attr('disabled',false);
-        },
-
-
-
-    };
 
     ClientFrontend.prototype.setTooltip = function(message) {
       jQuery('#copyBtn').tooltip('hide')
@@ -504,9 +273,6 @@
 
     };
 
-    // parsers
-    ClientFrontend.rdfaParser = RDFaParser;
-    ClientFrontend.rdfParser = RDFParser;
 
     window['client_frontend'] = ClientFrontend;
 })();
