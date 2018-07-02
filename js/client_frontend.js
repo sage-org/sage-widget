@@ -229,14 +229,9 @@
             this.totalResults(0);
             this.totalResultPages(0);
             this.currentResultPage(0);
-            var metadata = {
-              httpCalls : 0,
-              importTotal : 0.0,
-              exportTotal : 0.0
-            }
+
             var spy = new sage.Spy();
-            var client = new sage.SageRequestClient(server,spy);
-            results = new sage.SparqlIterator(query, {client});
+            results = new sage.SparqlIterator(query, {spy: spy},server);
             results.on('data',function(res){
               for (var variable in res) {
                 if (res[variable] === null) {
