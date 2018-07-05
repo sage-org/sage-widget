@@ -233,6 +233,9 @@
             var spy = new sage.Spy();
             results = new sage.SparqlIterator(query, {spy: spy},server);
             results.on('data',function(res){
+              if (typeof res == "boolean") {
+                  res = {result : res};
+              }
               for (var variable in res) {
                 if (res[variable] === null) {
                   res[variable] = "null";
