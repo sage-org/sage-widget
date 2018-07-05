@@ -234,7 +234,7 @@
             results = new sage.SparqlIterator(query, {spy: spy},server);
             results.on('data',function(res){
               if (typeof res == "boolean") {
-                  res = {result : res};
+                  res = {result : res.toString()};
               }
               for (var variable in res) {
                 if (res[variable] === null) {
