@@ -7,7 +7,7 @@
         <div class='input-group mb-3 query-list'>\
         <div class='input-group-prepend'>\
           <button class='btn btn-outline-secondary dropdown-toggle' type='button' id='dropdownMenuButton' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>Sample Queries</button>\
-          <div class='dropdown-menu' id='queryList'>\
+          <div class='dropdown-menu scrollable-menu' id='queryList'>\
           </div>\
         </div>\
             <input type='text' class='form-control' id='sparql-query-desc-text' disabled/>\
@@ -264,6 +264,16 @@
             results.on('end',function(){
               jQuery('#loadingBtn').hide();
               jQuery('#copyBtn').show();
+              var t1 = performance.now();
+              var execTime = Number(((t1 - t0)/1000).toFixed(4));
+              jQuery('#timer')[0].innerText = "Execution time: " + execTime + "s";
+              jQuery('#httpCalls')[0].innerText = "HTTP calls: " + spy.nbHTTPCalls;
+              var avgImp = Number(spy.avgImportTime.toFixed(4));
+              var avgExp = Number(spy.avgExportTime.toFixed(4));
+              var avgResp = Number(spy.avgResponseTime.toFixed(0));
+              jQuery('#avgImp')[0].innerText = "Average import time: " + avgImp + "ms";
+              jQuery('#avgExp')[0].innerText = "Average export time: " + avgExp + "ms";
+              jQuery('#avgResp')[0].innerText = "Average response time: " + avgResp + "ms";
             })
             jQuery('#loadingBtn').show();
             jQuery('#copyBtn').hide();
