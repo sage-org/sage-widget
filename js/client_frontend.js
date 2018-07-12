@@ -85,8 +85,9 @@
 
     ClientFrontend.prototype.buildMenu = function() {
         var html = "<div id='rdf-store-menu'>";
-        html = html + "<div id='rdf-store-menu-run' class='rdf-store-menu-action'><button type='button' class='btn btn-primary' data-bind='click:submitQuery'>Execute</button><button type='button' id='copyBtn' class='btn btn-secondary' data-bind='click:copyToClipboard'>Copy results to clipboard</button><button type='button' id='loadingBtn' class='btn btn-warning' href='#' disabled><i class='fas fa-sync fa-spin'></i>&nbsp;&nbsp;Loading</button><br/><br/><span class='metadata' id='timer'></span><span class='metadata' id='httpCalls'></span><span class='metadata' id='avgImp'></span><span class='metadata' id='avgExp'></span><span class='metadata' id='avgResp'></span></div>";
+        html = html + "<div id='rdf-store-menu-run' class='rdf-store-menu-action'><button type='button' id='execBtn' class='btn btn-primary' data-bind='click:submitQuery'>Execute</button><button type='button' id='stopBtn' class='btn btn-primary' data-bind='click:stopQuery'>Stop</button><button type='button' id='copyBtn' class='btn btn-secondary' data-bind='click:copyToClipboard'>Copy results to clipboard</button><button type='button' id='loadingBtn' class='btn btn-warning' href='#' disabled><i class='fas fa-sync fa-spin'></i>&nbsp;&nbsp;Loading</button><br/><br/><span class='metadata' id='timer'></span><span class='metadata' id='httpCalls'></span><span class='metadata' id='avgImp'></span><span class='metadata' id='avgExp'></span><span class='metadata' id='avgResp'></span></div>";
         jQuery('#client-frontend-menu').append(html);
+        jQuery('#stopBtn').hide();
         jQuery('#loadingBtn').hide();
         jQuery('#copyBtn').hide();
         jQuery('#copyBtn').tooltip({
@@ -217,6 +218,8 @@
         },
 
         submitQuery: function() {
+            jQuery('#execBtn').hide();
+            jQuery('#stopBtn').show();
             var query = this.application.yasqe.getValue();
             var server = jQuery('#sparql-server-text').val();
             jQuery('#client-frontend-next-image-placeholder').hide();
@@ -231,8 +234,8 @@
             this.currentResultPage(0);
 
             var spy = new sage.Spy();
-            results = new sage.SparqlIterator(query, {spy: spy},server);
-            results.on('data',function(res){
+            this.results = new sage.SparqlIterator(query, {spy: spy},server);
+            this.results.on('data',function(res){
               if (typeof res == "boolean") {
                   res = {result : res.toString()};
               }
@@ -261,7 +264,7 @@
                 jQuery('#client-frontend-next-image-placeholder').show();
               }
             });
-            results.on('end',function(){
+            this.results.on('end',function(){
               jQuery('#loadingBtn').hide();
               jQuery('#copyBtn').show();
               var t1 = performance.now();
@@ -277,6 +280,12 @@
             })
             jQuery('#loadingBtn').show();
             jQuery('#copyBtn').hide();
+        },
+
+        stopQuery: function(){
+          this.results.close();
+          jQuery('#execBtn').show();
+          jQuery('#stopBtn').hide();
         }
 
     };
