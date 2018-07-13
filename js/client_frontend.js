@@ -85,8 +85,10 @@
 
     ClientFrontend.prototype.buildMenu = function() {
         var html = "<div id='rdf-store-menu'>";
-        html = html + "<div id='rdf-store-menu-run' class='rdf-store-menu-action'><button type='button' id='execBtn' class='btn btn-primary' data-bind='click:submitQuery'>Execute</button><button type='button' id='stopBtn' class='btn btn-primary' data-bind='click:stopQuery'>Stop</button><button type='button' id='copyBtn' class='btn btn-secondary' data-bind='click:copyToClipboard'>Copy results to clipboard</button><button type='button' id='loadingBtn' class='btn btn-warning' href='#' disabled><i class='fas fa-sync fa-spin'></i>&nbsp;&nbsp;Loading</button><br/><br/><span class='metadata' id='timer'></span><span class='metadata' id='httpCalls'></span><span class='metadata' id='avgImp'></span><span class='metadata' id='avgExp'></span><span class='metadata' id='avgResp'></span></div>";
+        html = html + "<div id='rdf-store-menu-run' class='rdf-store-menu-action'><button type='button' id='execBtn' class='btn btn-primary' data-bind='click:submitQuery'>Execute</button><button type='button' id='pauseBtn' class='btn btn-primary' data-bind='click:pauseQuery'>Pause</button><button type='button' id='resumeBtn' class='btn btn-primary' data-bind='click:resumeQuery'>Resume</button><button type='button' id='stopBtn' class='btn btn-primary' data-bind='click:stopQuery'>Stop</button><button type='button' id='copyBtn' class='btn btn-secondary' data-bind='click:copyToClipboard'>Copy results to clipboard</button><button type='button' id='loadingBtn' class='btn btn-warning' href='#' disabled><i class='fas fa-sync fa-spin'></i>&nbsp;&nbsp;Loading</button><br/><br/><span class='metadata' id='timer'></span><span class='metadata' id='httpCalls'></span><span class='metadata' id='avgImp'></span><span class='metadata' id='avgExp'></span><span class='metadata' id='avgResp'></span></div>";
         jQuery('#client-frontend-menu').append(html);
+        jQuery('#pauseBtn').hide();
+        jQuery('#resumeBtn').hide();
         jQuery('#stopBtn').hide();
         jQuery('#loadingBtn').hide();
         jQuery('#copyBtn').hide();
@@ -219,6 +221,7 @@
 
         submitQuery: function() {
             jQuery('#execBtn').hide();
+            jQuery('#pauseBtn').show();
             jQuery('#stopBtn').show();
             var query = this.application.yasqe.getValue();
             var server = jQuery('#sparql-server-text').val();
@@ -267,6 +270,9 @@
             this.results.on('end',function(){
               jQuery('#loadingBtn').hide();
               jQuery('#copyBtn').show();
+              jQuery('#execBtn').show();
+              jQuery('#pauseBtn').hide();
+              jQuery('#stopBtn').hide();
               var t1 = performance.now();
               var execTime = Number(((t1 - t0)/1000).toFixed(4));
               jQuery('#timer')[0].innerText = "Execution time: " + execTime + "s";
@@ -286,6 +292,23 @@
           this.results.close();
           jQuery('#execBtn').show();
           jQuery('#stopBtn').hide();
+          jQuery('#pauseBtn').hide();
+          jQuery('#pauseBtn').hide();
+        },
+
+        pauseQuery: function(){
+          this.ondata = this.results._events.data
+          this.results.removeListener('data',this.ondata)
+          jQuery('#resumeBtn').show();
+          jQuery('#pauseBtn').hide();
+          jQuery('#loadingBtn').hide();
+        },
+
+        resumeQuery: function(){
+          this.results.on('data',this.ondata)
+          jQuery('#resumeBtn').hide();
+          jQuery('#pauseBtn').show();
+          jQuery('#loadingBtn').show();
         }
 
     };
