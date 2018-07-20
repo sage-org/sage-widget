@@ -235,6 +235,7 @@
             this.totalResults(0);
             this.totalResultPages(0);
             this.currentResultPage(0);
+            try {
 
             var spy = new sage.Spy();
             this.results = new sage.SparqlIterator(query, {spy: spy},server);
@@ -284,8 +285,19 @@
               jQuery('#avgExp')[0].innerText = "Average export time: " + avgExp + "ms";
               jQuery('#avgResp')[0].innerText = "Average response time: " + avgResp + "ms";
             })
+            this.results.on('error',function(e){
+              throw e;
+            })
             jQuery('#loadingBtn').show();
             jQuery('#copyBtn').hide();
+          }
+          catch(error) {
+            jQuery('#execBtn').show();
+            jQuery('#stopBtn').hide();
+            jQuery('#pauseBtn').hide();
+            jQuery('#loadingBtn').hide();
+            alert(error.message)
+          }
         },
 
         stopQuery: function(){
@@ -293,7 +305,7 @@
           jQuery('#execBtn').show();
           jQuery('#stopBtn').hide();
           jQuery('#pauseBtn').hide();
-          jQuery('#pauseBtn').hide();
+          jQuery('#loadingBtn').hide();
         },
 
         pauseQuery: function(){
