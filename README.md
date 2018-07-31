@@ -1,6 +1,7 @@
 # sage-widget
+[![Build Status](https://travis-ci.org/sage-org/sage-widget.svg?branch=master)](https://travis-ci.org/sage-org/sage-widget)
 
-A simple widget to evaluate SPARQL queries using a Sage server
+A simple React widget to evaluate SPARQL queries using a Sage server
 
 # Installation
 
