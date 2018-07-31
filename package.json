@@ -1,19 +1,51 @@
 {
   "name": "sage-widget",
   "version": "1.0.2",
-  "description": "Javascript client for Sage SPARQL Engine",
-  "main": "js/client_frontend.js",
+  "description": "A simple widget to evaluate SPARQL queries using a Sage server",
+  "main": "src/App.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "standard src/*.js --fix",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Slaanaroth/sage-client.git"
+    "url": "git+https://github.com/sage-org/sage-widget.git"
   },
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "sage client",
+    "sparql query",
+    "widget",
+    "react"
+  ],
+  "author": "Corentin Marionneau <corentin.marionneau@gmail.com> (https://github.com/Slaanaroth)",
+  "contributors": [
+    "Thomas Minier <thomas.minier@univ-nantes.fr> (https://callidon.github.io/)"
+  ],
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Slaanaroth/sage-client/issues"
+    "url": "https://github.com/sage-org/sage-widget/issues"
   },
-  "homepage": "https://github.com/Slaanaroth/sage-client#readme"
+  "homepage": "https://github.com/sage-org/sage-client#readme",
+  "dependencies": {
+    "react": "^16.4.1",
+    "react-dom": "^16.4.1",
+    "react-scripts": "1.1.4",
+    "react-table": "^6.8.6",
+    "sage-client": "^1.0.1",
+    "yasgui-yasqe": "^2.11.22"
+  },
+  "devDependencies": {
+    "standard": "^11.0.1"
+  },
+  "standard": {
+    "env": [
+      "browser",
+      "react",
+      "mocha",
+      "chai"
+    ]
+  }
 }
