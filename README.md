@@ -1,5 +1,6 @@
 # sage-widget
 [![Build Status](https://travis-ci.org/sage-org/sage-widget.svg?branch=master)](https://travis-ci.org/sage-org/sage-widget)
+[![npm version](https://badge.fury.io/js/sage-widget.svg)](https://badge.fury.io/js/sage-widget)
 
 A simple React widget to evaluate SPARQL queries using a Sage server
 
