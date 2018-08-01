@@ -1,6 +1,4 @@
 import React, { Component } from 'react'
-import SparqlIterator from 'sage-client/src/sparql-iterator.js'
-import Spy from 'sage-client/src/engine/spy.js'
 import ReactTable from 'react-table'
 import 'react-table/react-table.css'
 
@@ -21,6 +19,7 @@ class QueryExecutor extends Component {
       columns: [],
       executionTime: 0,
       httpCalls: 0,
+      avgServerTime: 0,
       errorMessage: null,
       isRunning: false,
       showTable: false,
@@ -40,20 +39,46 @@ class QueryExecutor extends Component {
             </button>
           </div>
         ) : (null)}
-        <button className='btn btn-primary' onClick={this.execute}>Execute</button>
-        {this.state.isRunning ? (
-          <button className='btn btn-danger' onClick={this.stopExecution}>Stop</button>
-        ) : (null)}
+        <div className='row'>
+          <div className='col-md-12'>
+            <button className='btn btn-primary' onClick={this.execute}>Execute</button>
+            {this.state.isRunning ? (
+              <span>{' '}<button className='btn btn-danger' onClick={this.stopExecution}>Stop</button></span>
+            ) : (null)}
+          </div>
+        </div>
         {this.state.showTable ? (
-          <div>
-            <p>Execution time: {this.state.executionTime}s HTTP calls: {this.state.httpCalls} ({this.state.results.length} mappings)</p>
-            <ReactTable
-              className='-striped'
-              data={this.state.results}
-              columns={this.state.columns}
-              defaultPageSize={REACT_TABLE_PAGE_SIZE}
-              noDataText='No mappings found'
-            />
+          <div className='row'>
+            <div className='col-md-12'>
+              <h3><i className='fas fa-chart-bar'></i> Real-time Statistics</h3>
+              <table className='table'>
+                <thead>
+                  <tr>
+                    <th>Execution time</th>
+                    <th>HTTP requests</th>
+                    <th># results</th>
+                    <th>Avg server response time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{this.state.executionTime} s</td>
+                    <td>{this.state.httpCalls} requests</td>
+                    <td>{this.state.results.length} solution mappings</td>
+                    <td>{this.state.avgServerTime} ms</td>
+                  </tr>
+                </tbody>
+              </table>
+              <h3><i className='fas fa-list-ul'></i> Query results</h3>
+              <ReactTable
+                sortable={false}
+                className='-striped'
+                data={this.state.results}
+                columns={this.state.columns}
+                defaultPageSize={REACT_TABLE_PAGE_SIZE}
+                noDataText='No mappings found'
+              />
+            </div>
           </div>
         ) : (null)}
       </div>
@@ -66,6 +91,7 @@ class QueryExecutor extends Component {
       results: [],
       columns: [],
       executionTime: 0,
+      avgServerTime: 0,
       httpCalls: 0,
       errorMessage: null,
       hasError: false
@@ -84,8 +110,8 @@ class QueryExecutor extends Component {
   execute () {
     this.stopExecution()
     this.resetState()
-    let spy = new Spy()
-    this.currentIterator = new SparqlIterator(this.props.query, {spy: spy}, this.props.url)
+    let spy = new sage.Spy()
+    this.currentIterator = new sage.SparqlIterator(this.props.query, {spy: spy}, this.props.url)
     this.setState({
       isRunning: true,
       showTable: true
@@ -108,7 +134,8 @@ class QueryExecutor extends Component {
       // update clock
       this.setState({
         executionTime: (now - startTime) / 1000,
-        httpCalls: spy.nbHTTPCalls
+        httpCalls: spy.nbHTTPCalls,
+        avgServerTime: spy.avgResponseTime
       })
       // store results and render them by batch
       bucket.push(x)
@@ -135,7 +162,8 @@ class QueryExecutor extends Component {
       // update clock
       this.setState({
         executionTime: (now - startTime) / 1000,
-        httpCalls: spy.nbHTTPCalls
+        httpCalls: spy.nbHTTPCalls,
+        avgServerTime: spy.avgResponseTime
       })
       this.setState({
         results: this.state.results.concat(bucket)

@@ -29,7 +29,7 @@ class SparqlEditor extends Component {
             <div className='input-group'>
               <div className='input-group-prepend'>
                 <div className='dropdown'>
-                  <button className='btn dropdown-toggle' type='button' id='dropdownMenuButton' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
+                  <button className='btn btn-outline-secondary dropdown-toggle' type='button' id='dropdownMenuButton' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
                     Select server
                   </button>
                   <div className='dropdown-menu' aria-labelledby='dropdownMenuButton'>
