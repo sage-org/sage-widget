@@ -14,14 +14,37 @@ class SparqlEditor extends Component {
   constructor (props) {
     super(props)
     this.state = {
-      query: 'select * where { ?s ?p ?o }'
+      query: 'select * where { ?s ?p ?o }',
+      url: 'http://sage.univ-nantes.fr/sparql/dbpedia-2016-04'
     }
+
+    this.updateUrl = this.updateUrl.bind(this)
   }
   render () {
     return (
       <div className='SparqlEditor'>
+        <form>
+          <div className='form-group'>
+            <label for='serverInput'><strong>Server:</strong></label>
+            <div className='input-group'>
+              <div className='input-group-prepend'>
+                <div className='dropdown'>
+                  <button className='btn btn-secondary dropdown-toggle' type='button' id='dropdownMenuButton' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
+                    Select server
+                  </button>
+                  <div className='dropdown-menu' aria-labelledby='dropdownMenuButton'>
+                    <a className='dropdown-item' href='#'>Action</a>
+                    <a className='dropdown-item' href='#'>Another action</a>
+                    <a className='dropdown-item' href='#'>Something else here</a>
+                  </div>
+                </div>
+              </div>
+              <input className='form-control' id='serverInput' type='text' value={this.state.url} onChange={this.updateUrl} />
+            </div>
+          </div>
+        </form>
         <textarea id='yasqe-editor' />
-        <QueryExecutor query={this.state.query} url='http://sage.univ-nantes.fr/sparql/dbpedia-2016-04' />
+        <QueryExecutor query={this.state.query} url={this.state.url} />
       </div>
     )
   }
@@ -39,6 +62,12 @@ class SparqlEditor extends Component {
 
   componentDidUpdate () {
     this.yasqe.refresh()
+  }
+
+  updateUrl (event) {
+    this.setState({
+      url: event.target.value
+    })
   }
 }
 
