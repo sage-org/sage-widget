@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import SageClient from 'sage-client/src/client.js'
+import SparqlIterator from 'sage-client/src/sparql-iterator.js'
 import Spy from 'sage-client/src/engine/spy.js'
 import ReactTable from 'react-table'
 import 'react-table/react-table.css'
@@ -15,7 +15,6 @@ const REACT_TABLE_PAGE_SIZE = 10
 class QueryExecutor extends Component {
   constructor (props) {
     super(props)
-    this.client = new SageClient(this.props.url)
     this.currentIterator = null
     this.state = {
       results: [],
@@ -47,7 +46,7 @@ class QueryExecutor extends Component {
         ) : (null)}
         {this.state.showTable ? (
           <div>
-            <p>Results {this.state.executionTime}s {this.state.httpCalls} HTTP calls ({this.state.results.length} mappings)</p>
+            <p>Execution time: {this.state.executionTime}s HTTP calls: {this.state.httpCalls} ({this.state.results.length} mappings)</p>
             <ReactTable
               className='-striped'
               data={this.state.results}
@@ -86,7 +85,7 @@ class QueryExecutor extends Component {
     this.stopExecution()
     this.resetState()
     let spy = new Spy()
-    this.currentIterator = this.client.execute(this.props.query, spy)
+    this.currentIterator = new SparqlIterator(this.props.query, {spy: spy}, this.props.url)
     this.setState({
       isRunning: true,
       showTable: true
