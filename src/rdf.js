@@ -30,6 +30,7 @@ function namespace (prefix) {
   }
 }
 
+const DCTERMS = namespace('http://purl.org/dc/terms/')
 const HYDRA = namespace('http://www.w3.org/ns/hydra/core#')
 const RDF = namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
 const RDFS = namespace('http://www.w3.org/2000/01/rdf-schema#')
@@ -39,6 +40,7 @@ const VOID = namespace('http://rdfs.org/ns/void#')
 
 module.exports = {
   namespace,
+  DCTERMS,
   HYDRA,
   RDF,
   RDFS,

@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 import QueryExecutor from '../query-executor/QueryExecutor.js'
 import YASQE from 'yasgui-yasqe'
-import { HYDRA, SAGE, SD, RDF, RDFS } from '../rdf.js'
+import sortBy from 'lodash.sortby'
+import { DCTERMS, HYDRA, SAGE, SD, RDF, RDFS } from '../rdf.js'
 import 'yasgui-yasqe/dist/yasqe.min.css'
 import './SparqlEditor.css'
 
@@ -43,8 +44,8 @@ class SparqlEditor extends Component {
                     Select server
                   </button>
                   <div className='dropdown-menu' aria-labelledby='dropdownMenuButton'>
-                    {this.state.urls.map(url => (
-                      <a className='dropdown-item' key={url} href={url} onClick={this.setUrl}>{url}</a>
+                    {this.state.urls.map(s => (
+                      <a className='dropdown-item' key={s.url} href={s.url} onClick={this.setUrl}>{s.name}</a>
                     ))}
                   </div>
                 </div>
@@ -124,13 +125,17 @@ class SparqlEditor extends Component {
         const id = descriptor.get(g['@id'])[SD('graph')][0]['@id']
         return descriptor.get(id)
       })
-    const urls = graphs.map(g => g[HYDRA('entrypoint')][0]['@id']).sort()
+    const urls = sortBy(graphs.map(g => {
+      return {
+        name: g[DCTERMS('title')][0]['@value'],
+        url: g[HYDRA('entrypoint')][0]['@id']
+      }
+    }), ['name'])
     const queries = []
     graphs.forEach(g => {
       if (SAGE('hasExampleQuery') in g) {
-        g[SAGE('hasExampleQuery')]
-          .map(x => descriptor.get(x['@id']))
-          .sort()
+        sortBy(g[SAGE('hasExampleQuery')]
+          .map(x => descriptor.get(x['@id'])), q => q[RDFS('label')][0]['@value'])
           .forEach(q => {
             queries.push({
               url: g[HYDRA('entrypoint')][0]['@id'],
@@ -141,7 +146,7 @@ class SparqlEditor extends Component {
       }
     })
     this.setState({
-      url: urls[0],
+      url: urls[0].url,
       urls,
       queries
     })

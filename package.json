@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/sage-org/sage-client#readme",
   "dependencies": {
+    "lodash.sortby": "^4.7.0",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
     "react-table": "^6.8.6",
