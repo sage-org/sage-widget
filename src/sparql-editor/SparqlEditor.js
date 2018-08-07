@@ -14,7 +14,7 @@ import './SparqlEditor.css'
 class SparqlEditor extends Component {
   constructor (props) {
     super(props)
-    this.serverUrl = 'http://localhost:8000'
+    this.serverUrl = this.props.url
     if (this.serverUrl.endsWith('/')) {
       this.serverUrl = this.serverUrl.substring(0, this.serverUrl.length - 1)
     }
