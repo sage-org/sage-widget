@@ -43,7 +43,7 @@ class SparqlEditor extends Component {
                   <button className='btn btn-outline-secondary dropdown-toggle' type='button' id='dropdownMenuButton' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
                     Select server
                   </button>
-                  <div className='dropdown-menu' aria-labelledby='dropdownMenuButton'>
+                  <div className='dropdown-menu scrollable-menu' aria-labelledby='dropdownMenuButton'>
                     {this.state.urls.map(s => (
                       <a className='dropdown-item' key={s.url} href={s.url} onClick={this.setUrl}>{s.name}</a>
                     ))}
@@ -62,7 +62,7 @@ class SparqlEditor extends Component {
                   <button className='btn btn-outline-secondary dropdown-toggle' type='button' id='dropdownMenuButton' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
                     Preset queries
                   </button>
-                  <div className='dropdown-menu' aria-labelledby='dropdownMenuButton'>
+                  <div className='dropdown-menu scrollable-menu' aria-labelledby='dropdownMenuButton'>
                     {this.state.queries.map(q => (
                       <a className='dropdown-item' key={q.name} qValue={q.value} href={q.url} onClick={this.setPresetQuery}>{q.name}</a>
                     ))}
@@ -131,11 +131,11 @@ class SparqlEditor extends Component {
         url: g[HYDRA('entrypoint')][0]['@id']
       }
     }), ['name'])
-    const queries = []
+    let queries = []
     graphs.forEach(g => {
       if (SAGE('hasExampleQuery') in g) {
-        sortBy(g[SAGE('hasExampleQuery')]
-          .map(x => descriptor.get(x['@id'])), q => q[RDFS('label')][0]['@value'])
+        g[SAGE('hasExampleQuery')]
+          .map(x => descriptor.get(x['@id']))
           .forEach(q => {
             queries.push({
               url: g[HYDRA('entrypoint')][0]['@id'],
@@ -145,6 +145,7 @@ class SparqlEditor extends Component {
           })
       }
     })
+    queries = sortBy(queries, q => q.name)
     this.setState({
       url: urls[0].url,
       urls,
