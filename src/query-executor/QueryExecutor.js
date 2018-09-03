@@ -111,7 +111,8 @@ class QueryExecutor extends Component {
     this.stopExecution()
     this.resetState()
     let spy = new sage.Spy()
-    this.currentIterator = new sage.SparqlIterator(this.props.query, {spy: spy}, this.props.url)
+    let client = new sage.SageClient(this.props.url, spy)
+    this.currentIterator = client.execute(this.props.query)
     this.setState({
       isRunning: true,
       showTable: true
