@@ -14,6 +14,34 @@ class QueryExecutor extends Component {
   constructor (props) {
     super(props)
     this.currentIterator = null
+    this.listener = x => {
+      const now = Date.now()
+      // update clock
+      this.setState({
+        executionTime: (now - this.startTime) / 1000,
+        httpCalls: this.spy.nbHTTPCalls,
+        avgServerTime: this.spy.avgResponseTime
+      })
+      // store results and render them by batch
+      this.bucket.push(x)
+      if (this.warmup) {
+        this.setState({
+          columns: Object.keys(x).map(k => {
+            return {
+              Header: k,
+              accessor: k
+            }
+          })
+        })
+        this.warmup = false
+      }
+      if (this.bucket.length >= BUCKET_SIZE) {
+        this.setState({
+          results: this.state.results.concat(this.bucket)
+        })
+        this.bucket = []
+      }
+    }
     this.state = {
       results: [],
       columns: [],
@@ -23,30 +51,37 @@ class QueryExecutor extends Component {
       errorMessage: null,
       isRunning: false,
       showTable: false,
-      hasError: false
+      hasError: false,
+      pauseText: 'Pause'
     }
     this.execute = this.execute.bind(this)
     this.stopExecution = this.stopExecution.bind(this)
+    this.pauseExecution = this.pauseExecution.bind(this)
   }
+
   render () {
     return (
       <div className='QueryExecutor'>
+        <div className='row'>
+          <div className='col-md-12'>
+            {this.state.isRunning ? (
+              <div>
+                <button className='btn btn-warning' onClick={this.pauseExecution}>{this.state.pauseText}</button>
+                <span>{' '}<button className='btn btn-danger' onClick={this.stopExecution}>Stop</button></span>
+              </div>
+            ) : (
+              <button className='btn btn-primary' onClick={this.execute}>Execute</button>
+            )}
+          </div>
+        </div>
         {this.state.hasError ? (
-          <div className='alert alert-warning alert-dismissible fade show' role='alert'>
-            <strong>Error</strong> {this.sate.errorMessage}
+          <div className='alert alert-danger alert-dismissible fade show' role='alert'>
+            <strong>Error:</strong> {this.state.errorMessage.message}
             <button type='button' className='close' data-dismiss='alert' aria-label='Close'>
               <span aria-hidden='true'>&times;</span>
             </button>
           </div>
         ) : (null)}
-        <div className='row'>
-          <div className='col-md-12'>
-            <button className='btn btn-primary' onClick={this.execute}>Execute</button>
-            {this.state.isRunning ? (
-              <span>{' '}<button className='btn btn-danger' onClick={this.stopExecution}>Stop</button></span>
-            ) : (null)}
-          </div>
-        </div>
         {this.state.showTable ? (
           <div className='row'>
             <div className='col-md-12'>
@@ -57,7 +92,6 @@ class QueryExecutor extends Component {
                     <th>Execution time</th>
                     <th>HTTP requests</th>
                     <th># results</th>
-                    <th>Avg server response time</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -65,7 +99,6 @@ class QueryExecutor extends Component {
                     <td>{this.state.executionTime} s</td>
                     <td>{this.state.httpCalls} requests</td>
                     <td>{this.state.results.length} solution mappings</td>
-                    <td>{this.state.avgServerTime} ms</td>
                   </tr>
                 </tbody>
               </table>
@@ -94,7 +127,8 @@ class QueryExecutor extends Component {
       avgServerTime: 0,
       httpCalls: 0,
       errorMessage: null,
-      hasError: false
+      hasError: false,
+      pauseText: 'Pause'
     })
   }
 
@@ -107,72 +141,73 @@ class QueryExecutor extends Component {
     })
   }
 
-  execute () {
-    this.stopExecution()
-    this.resetState()
-    let spy = new sage.Spy()
-    let client = new sage.SageClient(this.props.url, spy)
-    this.currentIterator = client.execute(this.props.query)
-    this.setState({
-      isRunning: true,
-      showTable: true
-    })
-    let bucket = []
-    let warmup = true
-    let startTime = Date.now()
-    this.currentIterator.on('error', err => {
-      console.error(err)
+  pauseExecution () {
+    if (this.state.pauseText === 'Pause') {
+      this.currentIterator.removeListener('data', this.listener)
       this.setState({
-        errorMessage: err
+        pauseText: 'Resume'
       })
+    } else {
+      this._readIterator()
       this.setState({
+        pauseText: 'Pause'
+      })
+    }
+  }
+
+  _readIterator () {
+    if (this.currentIterator !== null) {
+      this.currentIterator.on('data', this.listener)
+    }
+  }
+
+  execute () {
+    try {
+      this.stopExecution()
+      this.resetState()
+      this.spy = new sage.Spy()
+      let client = new sage.SageClient(this.props.url, this.spy)
+      this.currentIterator = client.execute(this.props.query)
+      this.setState({
+        isRunning: true,
+        showTable: true
+      })
+      this.bucket = []
+      this.warmup = true
+      this.startTime = Date.now()
+      this.currentIterator.on('error', err => {
+        console.error(err)
+        this.setState({
+          errorMessage: err,
+          isRunning: false,
+          hasError: true
+        })
+      })
+
+      this.currentIterator.on('end', () => {
+        const now = Date.now()
+        // update clock
+        this.setState({
+          executionTime: (now - this.startTime) / 1000,
+          httpCalls: this.spy.nbHTTPCalls,
+          avgServerTime: this.spy.avgResponseTime
+        })
+        this.setState({
+          results: this.state.results.concat(this.bucket)
+        })
+        this.setState({
+          isRunning: false
+        })
+      })
+
+      this._readIterator()
+    } catch (e) {
+      this.setState({
+        errorMessage: e,
         isRunning: false,
         hasError: true
       })
-    })
-    this.currentIterator.on('data', x => {
-      const now = Date.now()
-      // update clock
-      this.setState({
-        executionTime: (now - startTime) / 1000,
-        httpCalls: spy.nbHTTPCalls,
-        avgServerTime: spy.avgResponseTime
-      })
-      // store results and render them by batch
-      bucket.push(x)
-      if (warmup) {
-        this.setState({
-          columns: Object.keys(x).map(k => {
-            return {
-              Header: k,
-              accessor: k
-            }
-          })
-        })
-        warmup = false
-      }
-      if (bucket.length >= BUCKET_SIZE) {
-        this.setState({
-          results: this.state.results.concat(bucket)
-        })
-        bucket = []
-      }
-    })
-    this.currentIterator.on('end', () => {
-      const now = Date.now()
-      // update clock
-      this.setState({
-        executionTime: (now - startTime) / 1000,
-        httpCalls: spy.nbHTTPCalls,
-        avgServerTime: spy.avgResponseTime
-      })
-      this.setState({
-        results: this.state.results.concat(bucket)
-      })
-      this.setState({
-        isRunning: false
-      })
-    })
+    }
   }
 }
 
