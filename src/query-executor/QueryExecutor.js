@@ -20,7 +20,11 @@ class QueryExecutor extends Component {
       this.setState({
         executionTime: (now - this.startTime) / 1000,
         httpCalls: this.spy.nbHTTPCalls,
-        avgServerTime: this.spy.avgResponseTime
+        avgServerTime: this.spy.avgResponseTime,
+        history: this.state.history.concat([{
+          x: (now - this.startTime) / 1000,
+          y: this.spy.avgResponseTime
+        }])
       })
       // store results and render them by batch
       this.bucket.push(x)
@@ -45,6 +49,7 @@ class QueryExecutor extends Component {
     this.state = {
       results: [],
       columns: [],
+      history: [],
       executionTime: 0,
       httpCalls: 0,
       avgServerTime: 0,
@@ -72,45 +77,53 @@ class QueryExecutor extends Component {
             ) : (
               <button className='btn btn-primary' onClick={this.execute}>Execute</button>
             )}
+            {this.state.hasError ? (
+              <div className='alert alert-danger alert-dismissible fade show' role='alert'>
+                <strong>Error:</strong> {this.state.errorMessage.message}
+                <button type='button' className='close' data-dismiss='alert' aria-label='Close'>
+                  <span aria-hidden='true'>&times;</span>
+                </button>
+              </div>
+            ) : (null)}
           </div>
         </div>
-        {this.state.hasError ? (
-          <div className='alert alert-danger alert-dismissible fade show' role='alert'>
-            <strong>Error:</strong> {this.state.errorMessage.message}
-            <button type='button' className='close' data-dismiss='alert' aria-label='Close'>
-              <span aria-hidden='true'>&times;</span>
-            </button>
-          </div>
-        ) : (null)}
         {this.state.showTable ? (
-          <div className='row'>
-            <div className='col-md-12'>
-              <h3><i className='fas fa-chart-bar'></i> Real-time Statistics</h3>
-              <table className='table'>
-                <thead>
-                  <tr>
-                    <th>Execution time</th>
-                    <th>HTTP requests</th>
-                    <th># results</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>{this.state.executionTime} s</td>
-                    <td>{this.state.httpCalls} requests</td>
-                    <td>{this.state.results.length} solution mappings</td>
-                  </tr>
-                </tbody>
-              </table>
-              <h3><i className='fas fa-list-ul'></i> Query results</h3>
-              <ReactTable
-                sortable={false}
-                className='-striped'
-                data={this.state.results}
-                columns={this.state.columns}
-                defaultPageSize={REACT_TABLE_PAGE_SIZE}
-                noDataText='No mappings found'
-              />
+          <div>
+            <div className='row'>
+              <div className='col-md-12'>
+                <h3><i className='fas fa-chart-bar' /> Real-time Statistics</h3>
+                <table className='table'>
+                  <thead>
+                    <tr>
+                      <th>Execution time</th>
+                      <th>HTTP requests</th>
+                      <th>Number of results</th>
+                      <th>Avg. HTTp response time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>{this.state.executionTime} s</td>
+                      <td>{this.state.httpCalls} requests</td>
+                      <td>{this.state.results.length} solution mappings</td>
+                      <td>{Math.floor(this.state.avgServerTime)} ms</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className='row'>
+              <div className='col-md-12'>
+                <h3><i className='fas fa-list-ul' /> Query results</h3>
+                <ReactTable
+                  sortable={false}
+                  className='-striped'
+                  data={this.state.results}
+                  columns={this.state.columns}
+                  defaultPageSize={REACT_TABLE_PAGE_SIZE}
+                  noDataText='No mappings found'
+                />
+              </div>
             </div>
           </div>
         ) : (null)}
@@ -123,6 +136,7 @@ class QueryExecutor extends Component {
     this.setState({
       results: [],
       columns: [],
+      history: [],
       executionTime: 0,
       avgServerTime: 0,
       httpCalls: 0,
