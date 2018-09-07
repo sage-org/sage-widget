@@ -79,7 +79,7 @@ class QueryExecutor extends Component {
             )}
             {this.state.hasError ? (
               <div className='alert alert-danger alert-dismissible fade show' role='alert'>
-                <strong>Error:</strong> {this.state.errorMessage.message}
+                <strong>Error:</strong> {this.state.errorMessage}
                 <button type='button' className='close' data-dismiss='alert' aria-label='Close'>
                   <span aria-hidden='true'>&times;</span>
                 </button>
@@ -140,7 +140,7 @@ class QueryExecutor extends Component {
       executionTime: 0,
       avgServerTime: 0,
       httpCalls: 0,
-      errorMessage: null,
+      errorMessage: '',
       hasError: false,
       pauseText: 'Pause'
     })
@@ -192,7 +192,7 @@ class QueryExecutor extends Component {
       this.currentIterator.on('error', err => {
         console.error(err)
         this.setState({
-          errorMessage: err,
+          errorMessage: err.message,
           isRunning: false,
           hasError: true
         })
@@ -217,7 +217,7 @@ class QueryExecutor extends Component {
       this._readIterator()
     } catch (e) {
       this.setState({
-        errorMessage: e,
+        errorMessage: e.message,
         isRunning: false,
         hasError: true
       })
