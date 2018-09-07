@@ -20,8 +20,8 @@ class SparqlEditor extends Component {
       this.serverUrl = this.serverUrl.substring(0, this.serverUrl.length - 1)
     }
     this.state = {
-      query: '',
-      queryName: '',
+      query: 'defaultQuery' in this.props ? this.props.defaultQuery : '',
+      queryName: 'defaultQName' in this.props ? this.props.defaultQName : '',
       url: '',
       urls: [],
       queries: []

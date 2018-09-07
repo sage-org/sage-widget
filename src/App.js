@@ -6,7 +6,10 @@ class App extends Component {
   render () {
     return (
       <div className='App'>
-        <SparqlEditor url={this.props.url} />
+        <SparqlEditor
+          url={this.props.url}
+          defaultQuery={this.props.defaultQuery}
+          defaultQName={this.props.defaultQName} />
       </div>
     )
   }
