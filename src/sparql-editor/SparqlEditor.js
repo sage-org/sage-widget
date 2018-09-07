@@ -22,7 +22,7 @@ class SparqlEditor extends Component {
     this.state = {
       query: 'defaultQuery' in this.props ? this.props.defaultQuery : '',
       queryName: 'defaultQName' in this.props ? this.props.defaultQName : '',
-      url: '',
+      url: 'defaultServer' in this.props ? this.props.defaultServer : '',
       urls: [],
       queries: []
     }
@@ -147,7 +147,7 @@ class SparqlEditor extends Component {
     })
     queries = sortBy(queries, q => q.name)
     this.setState({
-      url: urls[0].url,
+      url: (this.state.url === '') ? urls[0].url : this.state.url,
       urls,
       queries
     })

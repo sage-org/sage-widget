@@ -8,6 +8,7 @@ class App extends Component {
       <div className='App'>
         <SparqlEditor
           url={this.props.url}
+          defaultServer={this.props.defaultServer}
           defaultQuery={this.props.defaultQuery}
           defaultQName={this.props.defaultQName} />
       </div>
