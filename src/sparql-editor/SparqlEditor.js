@@ -1,8 +1,34 @@
+/* file : SparqlEditor.js
+MIT License
+
+Copyright (c) 2018 Thomas Minier
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+'use strict'
 import React, { Component } from 'react'
 import QueryExecutor from '../query-executor/QueryExecutor.js'
 import YASQE from 'yasgui-yasqe'
 import sortBy from 'lodash.sortby'
 import { DCTERMS, HYDRA, SAGE, SD, RDF, RDFS } from '../rdf.js'
+import { groupBy, map } from 'lodash'
 import 'yasgui-yasqe/dist/yasqe.min.css'
 import './SparqlEditor.css'
 
@@ -63,8 +89,12 @@ class SparqlEditor extends Component {
                     Preset queries
                   </button>
                   <div className='dropdown-menu scrollable-menu' aria-labelledby='dropdownMenuButton'>
-                    {this.state.queries.map(q => (
-                      <a className='dropdown-item' key={q.name} qValue={q.value} href={q.url} onClick={this.setPresetQuery}>{q.name}</a>
+                    {this.state.queries.map(g => (
+                      <div>
+                        <h6>{g[0]}</h6>
+                        {g[1].map(q => (<a className='dropdown-item' key={q.name} qValue={q.value} href={q.url} onClick={this.setPresetQuery}>{q.name}</a>)
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -139,13 +169,19 @@ class SparqlEditor extends Component {
           .forEach(q => {
             queries.push({
               url: g[HYDRA('entrypoint')][0]['@id'],
+              dataset: g[DCTERMS('title')][0]['@value'],
               name: q[RDFS('label')][0]['@value'],
               value: q[RDF('value')][0]['@value']
             })
           })
       }
     })
-    queries = sortBy(queries, q => q.name)
+    queries = groupBy(queries, 'dataset')
+    queries = sortBy(map(queries, function (v, k) {
+      return [k, sortBy(v, ['name'])]
+    }), function (v) {
+      return v[0]
+    })
     this.setState({
       url: (this.state.url === '') ? urls[0].url : this.state.url,
       urls,
