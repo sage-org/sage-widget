@@ -58,7 +58,14 @@ class QueryExecutor extends Component {
           columns: Object.keys(x).map(k => {
             return {
               Header: k,
-              accessor: k
+              accessor: k,
+              // render URIs as external links
+              Cell: row => {
+                if (row.value.startsWith('http')) {
+                  return (<a href={row.value} target='_blank'>{row.value}</a>)
+                }
+                return (<span>{row.value}</span>)
+              }
             }
           })
         })
