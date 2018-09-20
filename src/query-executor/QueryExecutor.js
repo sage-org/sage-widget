@@ -130,7 +130,7 @@ class QueryExecutor extends Component {
                       <th>Execution time</th>
                       <th>HTTP requests</th>
                       <th>Number of results</th>
-                      <th>Avg. HTTp response time</th>
+                      <th>Avg. HTTP response time</th>
                     </tr>
                   </thead>
                   <tbody>
