@@ -61,7 +61,7 @@ class QueryExecutor extends Component {
               accessor: k,
               // render URIs as external links
               Cell: row => {
-                if (row.value.startsWith('http')) {
+                if (row.value !== null && row.value.startsWith('http')) {
                   return (<a href={row.value} target='_blank'>{row.value}</a>)
                 }
                 return (<span>{row.value}</span>)
@@ -213,6 +213,7 @@ class QueryExecutor extends Component {
       this.resetState()
       this.spy = new sage.Spy()
       let client = new sage.SageClient(this.props.url, this.spy)
+      this._stubRequestClient(client)
       this.currentIterator = client.execute(this.props.query)
       this.setState({
         isRunning: true,
@@ -234,9 +235,7 @@ class QueryExecutor extends Component {
         const now = Date.now()
         // update clock
         this.setState({
-          executionTime: (now - this.startTime) / 1000,
-          httpCalls: this.spy.nbHTTPCalls,
-          avgServerTime: this.spy.avgResponseTime
+          executionTime: (now - this.startTime) / 1000
         })
         this.setState({
           results: this.state.results.concat(this.bucket)
@@ -252,6 +251,24 @@ class QueryExecutor extends Component {
         errorMessage: e.message,
         isRunning: false,
         hasError: true
+      })
+    }
+  }
+
+  /**
+   * Stub the HTTP client to measure HTTP requests
+   */
+  _stubRequestClient (sageClient) {
+    const sendRequest = sageClient._graph._httpClient._httpClient.post
+    sageClient._graph._httpClient._httpClient.post = (params, cb) => {
+      sendRequest(params, (err, res, body) => {
+        const now = Date.now()
+        this.setState({
+          executionTime: (now - this.startTime) / 1000,
+          httpCalls: this.spy.nbHTTPCalls,
+          avgServerTime: this.spy.avgResponseTime
+        })
+        cb(err, res, body)
       })
     }
   }
