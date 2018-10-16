@@ -24,7 +24,9 @@ SOFTWARE.
 
 'use strict'
 import React, { Component } from 'react'
+import ReactDOM from 'react-dom'
 import ReactTable from 'react-table'
+import Chart from 'chart.js';
 import 'react-table/react-table.css'
 
 const BUCKET_SIZE = 20
@@ -39,11 +41,29 @@ class QueryExecutor extends Component {
   constructor (props) {
     super(props)
     this.currentIterator = null
+    this.queueChart = null;
     this.listener = x => {
       const now = Date.now()
+      if (this.state.readyToRender) {
+        this.state.readyToRender = false;
+        var wrapper = ReactDOM.findDOMNode(this.refs.chartWrapper);
+        var canvas = ReactDOM.findDOMNode(this.refs.queueChart);
+        var ctx = canvas.getContext("2d");
+        this.queueChart = new Chart(ctx,{
+              type: "line",
+              beginAtZero: true,
+              data: this.state.data,
+              options: this.state.options
+          });
+      }
+      var nbQueue = Math.floor((this.spy._responseTimes[this.spy._responseTimes.length-1]-75)/75)
+      if (nbQueue < 0) {
+        nbQueue = 0;
+      }
       // update clock
       this.setState({
         executionTime: (now - this.startTime) / 1000,
+        queue: nbQueue,
         httpCalls: this.spy.nbHTTPCalls,
         avgServerTime: this.spy.avgResponseTime,
         history: this.state.history.concat([{
@@ -51,6 +71,12 @@ class QueryExecutor extends Component {
           y: this.spy.avgResponseTime
         }])
       })
+      var lastUpdate = this.state.data.labels[this.state.data.labels.length-1];
+      if (lastUpdate == null || lastUpdate != this.spy._nbHttpCalls) {
+        this.state.data.labels.push(this.spy._nbHttpCalls);
+        this.state.data.datasets[0].data.push(nbQueue);
+        this.queueChart.update();
+      }
       // store results and render them by batch
       this.bucket.push(x)
       if (this.warmup) {
@@ -85,6 +111,8 @@ class QueryExecutor extends Component {
       executionTime: 0,
       httpCalls: 0,
       avgServerTime: 0,
+      readyToRender: false,
+      queue: 0,
       errorMessage: null,
       isRunning: false,
       showTable: false,
@@ -99,6 +127,7 @@ class QueryExecutor extends Component {
   render () {
     return (
       <div className='QueryExecutor'>
+      <script src="node_modules/chart.js/dist/Chart.bundle.js"></script>
         <div className='row'>
           <div className='col-md-12'>
             {this.state.isRunning ? (
@@ -122,7 +151,7 @@ class QueryExecutor extends Component {
         {this.state.showTable ? (
           <div>
             <div className='row'>
-              <div className='col-md-12'>
+              <div className='col-md-12' ref={this.canvasRef}>
                 <h3><i className='fas fa-chart-bar' /> Real-time Statistics</h3>
                 <table className='table'>
                   <thead>
@@ -131,6 +160,7 @@ class QueryExecutor extends Component {
                       <th>HTTP requests</th>
                       <th>Number of results</th>
                       <th>Avg. HTTP response time</th>
+                      <th>Estimated server queue</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -139,9 +169,13 @@ class QueryExecutor extends Component {
                       <td>{this.state.httpCalls} requests</td>
                       <td>{this.state.results.length} solution mappings</td>
                       <td>{Math.floor(this.state.avgServerTime)} ms</td>
+                      <td>{this.state.queue} clients</td>
                     </tr>
                   </tbody>
                 </table>
+                <div className="chartWrapper" ref="chartWrapper">
+                  <canvas id="queueChart" ref="queueChart" width="100%" height="35%"></canvas>
+                </div>
               </div>
             </div>
             <div className='row'>
@@ -172,10 +206,86 @@ class QueryExecutor extends Component {
       executionTime: 0,
       avgServerTime: 0,
       httpCalls: 0,
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: "Estimated number of clients in queue",
+            backgroundColor: "rgba(63,127,191,0.2)",
+            pointBackgroundColor: "rgba(63,127,191,1)",
+            borderColor: "rgba(63,127,191,0.6)",
+            pointHoverBackgroundColor: "rgba(63,127,191,1)",
+            pointHoverBorderColor: "rgba(63,127,191,1)",
+            data: []
+          }
+        ]
+      },
+      options: {
+
+        ///Boolean - Whether grid lines are shown across the chart
+        scaleShowGridLines : true,
+
+        //String - Colour of the grid lines
+        scaleGridLineColor : "rgba(0,0,0,.05)",
+
+        //Number - Width of the grid lines
+        scaleGridLineWidth : 1,
+
+        //Boolean - Whether to show horizontal lines (except X axis)
+        scaleShowHorizontalLines: true,
+
+        //Boolean - Whether to show vertical lines (except Y axis)
+        scaleShowVerticalLines: true,
+
+        //Boolean - Whether the line is curved between points
+        bezierCurve : true,
+
+        //Number - Tension of the bezier curve between points
+        bezierCurveTension : 0.4,
+
+        //Boolean - Whether to show a dot for each point
+        pointDot : true,
+
+        //Number - Radius of each point dot in pixels
+        pointDotRadius : 4,
+
+        //Number - Pixel width of point dot stroke
+        pointDotStrokeWidth : 1,
+
+        //Number - amount extra to add to the radius to cater for hit detection outside the drawn point
+        pointHitDetectionRadius : 20,
+
+        //Boolean - Whether to show a stroke for datasets
+        datasetStroke : true,
+
+        //Number - Pixel width of dataset stroke
+        datasetStrokeWidth : 2,
+
+        //Boolean - Whether to fill the dataset with a colour
+        datasetFill : true,
+
+        //Boolean - Whether to horizontally center the label and point dot inside the grid
+        offsetGridLines : false,
+
+        scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        stepSize: 10,
+                        suggestedMax: 200
+                    }
+                }]
+            }
+      },
+      readyToRender: false,
+      queue: 0,
       errorMessage: '',
       hasError: false,
       pauseText: 'Pause'
     })
+    if (this.queueChart != null) {
+      this.queueChart.destroy();
+    }
   }
 
   stopExecution () {
@@ -217,7 +327,8 @@ class QueryExecutor extends Component {
       this.currentIterator = client.execute(this.props.query)
       this.setState({
         isRunning: true,
-        showTable: true
+        showTable: true,
+        readyToRender: true
       })
       this.bucket = []
       this.warmup = true
