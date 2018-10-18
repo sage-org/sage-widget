@@ -24,10 +24,9 @@ SOFTWARE.
 
 'use strict'
 import React, { Component } from 'react'
-import ReactDOM from 'react-dom'
 import ReactTable from 'react-table'
-import Chart from 'chart.js';
 import 'react-table/react-table.css'
+import protobuf from 'protobufjs'
 
 const BUCKET_SIZE = 20
 const REACT_TABLE_PAGE_SIZE = 10
@@ -44,26 +43,9 @@ class QueryExecutor extends Component {
     this.queueChart = null;
     this.listener = x => {
       const now = Date.now()
-      if (this.state.readyToRender) {
-        this.state.readyToRender = false;
-        var wrapper = ReactDOM.findDOMNode(this.refs.chartWrapper);
-        var canvas = ReactDOM.findDOMNode(this.refs.queueChart);
-        var ctx = canvas.getContext("2d");
-        this.queueChart = new Chart(ctx,{
-              type: "line",
-              beginAtZero: true,
-              data: this.state.data,
-              options: this.state.options
-          });
-      }
-      var nbQueue = Math.floor((this.spy._responseTimes[this.spy._responseTimes.length-1]-75)/75)
-      if (nbQueue < 0) {
-        nbQueue = 0;
-      }
       // update clock
       this.setState({
         executionTime: (now - this.startTime) / 1000,
-        queue: nbQueue,
         httpCalls: this.spy.nbHTTPCalls,
         avgServerTime: this.spy.avgResponseTime,
         history: this.state.history.concat([{
@@ -71,12 +53,6 @@ class QueryExecutor extends Component {
           y: this.spy.avgResponseTime
         }])
       })
-      var lastUpdate = this.state.data.labels[this.state.data.labels.length-1];
-      if (lastUpdate == null || lastUpdate != this.spy._nbHttpCalls) {
-        this.state.data.labels.push(this.spy._nbHttpCalls);
-        this.state.data.datasets[0].data.push(nbQueue);
-        this.queueChart.update();
-      }
       // store results and render them by batch
       this.bucket.push(x)
       if (this.warmup) {
@@ -103,6 +79,12 @@ class QueryExecutor extends Component {
         })
         this.bucket = []
       }
+      var answerCount = this.bucket.length + this.state.results.length;
+      this.answerGraph.push([((now-this.startTime)/1000),answerCount]);
+      var dief = this.evalDiefficiency();
+      this.setState({
+        diefficiency: dief
+      })
     }
     this.state = {
       results: [],
@@ -111,14 +93,14 @@ class QueryExecutor extends Component {
       executionTime: 0,
       httpCalls: 0,
       avgServerTime: 0,
-      readyToRender: false,
-      queue: 0,
+      diefficiency: 0,
       errorMessage: null,
       isRunning: false,
       showTable: false,
       hasError: false,
       pauseText: 'Pause'
     }
+    this.answerGraph = [[0,0]];
     this.execute = this.execute.bind(this)
     this.stopExecution = this.stopExecution.bind(this)
     this.pauseExecution = this.pauseExecution.bind(this)
@@ -151,7 +133,8 @@ class QueryExecutor extends Component {
         {this.state.showTable ? (
           <div>
             <div className='row'>
-              <div className='col-md-12' ref={this.canvasRef}>
+              <div className='col-md-12'>
+                <br/>
                 <h3><i className='fas fa-chart-bar' /> Real-time Statistics</h3>
                 <table className='table'>
                   <thead>
@@ -160,7 +143,7 @@ class QueryExecutor extends Component {
                       <th>HTTP requests</th>
                       <th>Number of results</th>
                       <th>Avg. HTTP response time</th>
-                      <th>Estimated server queue</th>
+                      <th>Server Diefficiency</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -169,13 +152,19 @@ class QueryExecutor extends Component {
                       <td>{this.state.httpCalls} requests</td>
                       <td>{this.state.results.length} solution mappings</td>
                       <td>{Math.floor(this.state.avgServerTime)} ms</td>
-                      <td>{this.state.queue} clients</td>
+                      <td>{this.state.diefficiency}</td>
                     </tr>
                   </tbody>
                 </table>
-                <div className="chartWrapper" ref="chartWrapper">
-                  <canvas id="queueChart" ref="queueChart" width="100%" height="35%"></canvas>
+                <button className='btn btn-warning' data-toggle="collapse" data-target="#logs">Open execution logs</button>
+                <br/>
+                <div id="logs" class="collapse">
+                  <br/>
+                  <pre>
+                  {this.state.execLogs}
+                  </pre>
                 </div>
+                <br/>
               </div>
             </div>
             <div className='row'>
@@ -206,86 +195,13 @@ class QueryExecutor extends Component {
       executionTime: 0,
       avgServerTime: 0,
       httpCalls: 0,
-      data: {
-        labels: [],
-        datasets: [
-          {
-            label: "Estimated number of clients in queue",
-            backgroundColor: "rgba(63,127,191,0.2)",
-            pointBackgroundColor: "rgba(63,127,191,1)",
-            borderColor: "rgba(63,127,191,0.6)",
-            pointHoverBackgroundColor: "rgba(63,127,191,1)",
-            pointHoverBorderColor: "rgba(63,127,191,1)",
-            data: []
-          }
-        ]
-      },
-      options: {
-
-        ///Boolean - Whether grid lines are shown across the chart
-        scaleShowGridLines : true,
-
-        //String - Colour of the grid lines
-        scaleGridLineColor : "rgba(0,0,0,.05)",
-
-        //Number - Width of the grid lines
-        scaleGridLineWidth : 1,
-
-        //Boolean - Whether to show horizontal lines (except X axis)
-        scaleShowHorizontalLines: true,
-
-        //Boolean - Whether to show vertical lines (except Y axis)
-        scaleShowVerticalLines: true,
-
-        //Boolean - Whether the line is curved between points
-        bezierCurve : true,
-
-        //Number - Tension of the bezier curve between points
-        bezierCurveTension : 0.4,
-
-        //Boolean - Whether to show a dot for each point
-        pointDot : true,
-
-        //Number - Radius of each point dot in pixels
-        pointDotRadius : 4,
-
-        //Number - Pixel width of point dot stroke
-        pointDotStrokeWidth : 1,
-
-        //Number - amount extra to add to the radius to cater for hit detection outside the drawn point
-        pointHitDetectionRadius : 20,
-
-        //Boolean - Whether to show a stroke for datasets
-        datasetStroke : true,
-
-        //Number - Pixel width of dataset stroke
-        datasetStrokeWidth : 2,
-
-        //Boolean - Whether to fill the dataset with a colour
-        datasetFill : true,
-
-        //Boolean - Whether to horizontally center the label and point dot inside the grid
-        offsetGridLines : false,
-
-        scales: {
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: true,
-                        stepSize: 10,
-                        suggestedMax: 200
-                    }
-                }]
-            }
-      },
-      readyToRender: false,
-      queue: 0,
+      diefficiency: 0,
+      execLogs: "No response yet",
       errorMessage: '',
       hasError: false,
       pauseText: 'Pause'
     })
-    if (this.queueChart != null) {
-      this.queueChart.destroy();
-    }
+    this.answerGraph = [[0,0]];
   }
 
   stopExecution () {
@@ -317,6 +233,17 @@ class QueryExecutor extends Component {
     }
   }
 
+  evalDiefficiency (){
+    var dief = this.state.diefficiency;
+    var i = this.answerGraph.length - 1;
+    var prevX = this.answerGraph[i-1][0];
+    var prevY = this.answerGraph[i-1][1];
+    var currX = this.answerGraph[i][0];
+    var currY = this.answerGraph[i][1];
+    var area = ((currX-prevX) * prevY) + (((currX-prevX) * (currY - prevY))/2);
+    return Math.round((dief + area) * 100) / 100 ;
+  }
+
   execute () {
     try {
       this.stopExecution()
@@ -328,7 +255,6 @@ class QueryExecutor extends Component {
       this.setState({
         isRunning: true,
         showTable: true,
-        readyToRender: true
       })
       this.bucket = []
       this.warmup = true
@@ -354,8 +280,13 @@ class QueryExecutor extends Component {
         this.setState({
           isRunning: false
         })
-      })
+        this.answerGraph.push([((now-this.startTime)/1000),this.state.results.length]);
+        var dief = this.evalDiefficiency();
+        this.setState({
+          diefficiency: dief
+        })
 
+      })
       this._readIterator()
     } catch (e) {
       this.setState({
@@ -366,6 +297,11 @@ class QueryExecutor extends Component {
     }
   }
 
+
+
+
+
+
   /**
    * Stub the HTTP client to measure HTTP requests
    */
@@ -374,11 +310,23 @@ class QueryExecutor extends Component {
     sageClient._graph._httpClient._httpClient.post = (params, cb) => {
       sendRequest(params, (err, res, body) => {
         const now = Date.now()
+        var next = body.next;
         this.setState({
           executionTime: (now - this.startTime) / 1000,
           httpCalls: this.spy.nbHTTPCalls,
           avgServerTime: this.spy.avgResponseTime
         })
+        if (next != null) {
+          var jsonDescriptor = require("../protobuf/iterators.json"); // exemplary for node
+          var root = protobuf.Root.fromJSON(jsonDescriptor);
+          var iterators = root.lookup("iterators");
+          var nsr=iterators.RootTree.decode(Buffer.from(next,'base64'));
+          var treeText = JSON.stringify(nsr, null, 2);
+          this.setState({
+            execLogs: treeText
+          })
+        }
+
         cb(err, res, body)
       })
     }

@@ -30,6 +30,7 @@
   "dependencies": {
     "chart.js": "^2.7.2",
     "lodash.sortby": "^4.7.0",
+    "protobufjs": "^6.8.8",
     "react": "^16.4.1",
     "react-chartjs": "^1.2.0",
     "react-dom": "^16.4.1",
