@@ -45,8 +45,15 @@ class SparqlEditor extends Component {
     if (this.serverUrl.endsWith('/')) {
       this.serverUrl = this.serverUrl.substring(0, this.serverUrl.length - 1)
     }
+    let defaultQuery = 'defaultQuery' in this.props ? this.props.defaultQuery : ''
+    // if the query was shared using YASQE, then a query is set in url#query=...
+    const url = window.location.href
+    if (url.includes('#query=')) {
+      const index = url.indexOf('#query=')
+      defaultQuery = decodeURIComponent(url.substring(index + 7).replace(/\+/gi, ' '))
+    }
     this.state = {
-      query: 'defaultQuery' in this.props ? this.props.defaultQuery : '',
+      query: defaultQuery,
       queryName: 'defaultQName' in this.props ? this.props.defaultQName : '',
       url: 'defaultServer' in this.props ? this.props.defaultServer : '',
       urls: [],

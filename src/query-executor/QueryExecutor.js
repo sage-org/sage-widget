@@ -38,8 +38,13 @@ const REACT_TABLE_PAGE_SIZE = 10
 class QueryExecutor extends Component {
   constructor (props) {
     super(props)
+    this.currentClient = null
     this.currentIterator = null
+    this.subscription = null
     this.listener = x => {
+      if ('toObject' in x) {
+        x = x.toObject()
+      }
       const now = Date.now()
       // update clock
       this.setState({
@@ -61,8 +66,20 @@ class QueryExecutor extends Component {
               accessor: k,
               // render URIs as external links
               Cell: row => {
-                if (row.value !== null && row.value.startsWith('http')) {
-                  return (<a href={row.value} target='_blank'>{row.value}</a>)
+                if (row.value.startsWith('http')) {
+                  return (<span>{'<'}<a href={row.value} target='_blank'>{row.value}</a>{'>'}</span>)
+                } else if (row.value.includes('^^<http')) {
+                  const index = row.value.lastIndexOf('^^<http')
+                  const value = row.value.substring(0, index + 3)
+                  const datatype = row.value.substring(index + 3, row.value.length - 1)
+                  return (<span>{value}<a href={datatype} target='_blank'>{datatype}</a>></span>)
+                } else if (row.value.includes('^^http')) {
+                  const index = row.value.lastIndexOf('^^http')
+                  const value = row.value.substring(0, index + 2)
+                  const datatype = row.value.substring(index + 2, row.value.length)
+                  return (<span>{value}{'<'}<a href={datatype} target='_blank'>{datatype}</a>{'>'}</span>)
+                } else if (row.value === 'UNBOUND') {
+                  return (<span className='badge badge-secondary'>unbound</span>)
                 }
                 return (<span>{row.value}</span>)
               }
@@ -103,11 +120,11 @@ class QueryExecutor extends Component {
           <div className='col-md-12'>
             {this.state.isRunning ? (
               <div>
-                <button className='btn btn-warning' onClick={this.pauseExecution}>{this.state.pauseText}</button>
-                <span>{' '}<button className='btn btn-danger' onClick={this.stopExecution}>Stop</button></span>
+                <button className='btn btn-warning' onClick={this.pauseExecution}><i class='fas fa-stop' /> {this.state.pauseText}</button>
+                <span>{' '}<button className='btn btn-danger' onClick={this.stopExecution}><i class='fas fa-times-circle' /> Stop</button></span>
               </div>
             ) : (
-              <button className='btn btn-primary' onClick={this.execute}>Execute</button>
+              <button className='btn btn-primary' onClick={this.execute}><i class='fas fa-play' /> Execute</button>
             )}
             {this.state.hasError ? (
               <div className='alert alert-danger alert-dismissible fade show' role='alert'>
@@ -127,10 +144,10 @@ class QueryExecutor extends Component {
                 <table className='table'>
                   <thead>
                     <tr>
-                      <th>Execution time</th>
-                      <th>HTTP requests</th>
-                      <th>Number of results</th>
-                      <th>Avg. HTTP response time</th>
+                      <th><i class='fas fa-stopwatch' /> Execution time</th>
+                      <th><i class='fas fa-download' /> HTTP requests</th>
+                      <th><i class='fas fa-list-ol' /> Number of results</th>
+                      <th><i class='fas fa-chart-line' /> Avg. HTTP response time</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -180,7 +197,8 @@ class QueryExecutor extends Component {
 
   stopExecution () {
     if (this.currentIterator != null) {
-      this.currentIterator.close()
+      this.subscription.unsubscribe()
+      this.currentClient._graph.close()
     }
     this.setState({
       isRunning: false
@@ -189,49 +207,30 @@ class QueryExecutor extends Component {
 
   pauseExecution () {
     if (this.state.pauseText === 'Pause') {
-      this.currentIterator.removeListener('data', this.listener)
+      this.subscription.unsubscribe()
+      this.currentClient._graph.close()
       this.setState({
         pauseText: 'Resume'
       })
     } else {
-      this._readIterator()
+      this._subscribe()
       this.setState({
         pauseText: 'Pause'
       })
     }
   }
 
-  _readIterator () {
+  _subscribe () {
     if (this.currentIterator !== null) {
-      this.currentIterator.on('data', this.listener)
-    }
-  }
-
-  execute () {
-    try {
-      this.stopExecution()
-      this.resetState()
-      this.spy = new sage.Spy()
-      let client = new sage.SageClient(this.props.url, this.spy)
-      this._stubRequestClient(client)
-      this.currentIterator = client.execute(this.props.query)
-      this.setState({
-        isRunning: true,
-        showTable: true
-      })
-      this.bucket = []
-      this.warmup = true
-      this.startTime = Date.now()
-      this.currentIterator.on('error', err => {
+      this.currentClient._graph.open()
+      this.subscription = this.currentIterator.subscribe(this.listener, err => {
         console.error(err)
         this.setState({
           errorMessage: err.message,
           isRunning: false,
           hasError: true
         })
-      })
-
-      this.currentIterator.on('end', () => {
+      }, () => {
         const now = Date.now()
         // update clock
         this.setState({
@@ -244,8 +243,25 @@ class QueryExecutor extends Component {
           isRunning: false
         })
       })
+    }
+  }
 
-      this._readIterator()
+  execute () {
+    try {
+      this.stopExecution()
+      this.resetState()
+      this.spy = new sage.Spy()
+      this.currentClient = new sage.SageClient(this.props.url, this.spy)
+      this._stubRequestClient(this.currentClient)
+      this.currentIterator = this.currentClient.execute(this.props.query)
+      this.setState({
+        isRunning: true,
+        showTable: true
+      })
+      this.bucket = []
+      this.warmup = true
+      this.startTime = Date.now()
+      this._subscribe()
     } catch (e) {
       this.setState({
         errorMessage: e.message,

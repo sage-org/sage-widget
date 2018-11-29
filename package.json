@@ -32,7 +32,7 @@
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
     "react-table": "^6.8.6",
-    "sage-client": "^1.1.4",
+    "sage-client": "^1.2.1",
     "yasgui-yasqe": "^2.11.22"
   },
   "devDependencies": {

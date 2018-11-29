@@ -12,9 +12,11 @@ npm install sage-widget --save
 
 # Usage
 
-First, add the following `<div>` tag where you want to add the widget
+First, add the following `<div>` tag where you want to add the widget.
+You can set the `url` attribute to initialize the widget using an online Sage server.
+
 ```html
-<div id="sage-widget"></div>
+<div id="sage-widget" url="http://my-sage-server.com"></div>
 ```
 
 Next, import `sage-widget` files in your website
@@ -26,5 +28,6 @@ Next, import `sage-widget` files in your website
 
 **Javascript import**
 ```html
+<script src="node_modules/sage-client/dist/sage-client.bundle.js"></script>
 <script src="node_modules/sage-widget/dist/sage-widget.bundle.js"></script>
 ```
