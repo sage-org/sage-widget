@@ -101,7 +101,6 @@ class QueryExecutor extends Component {
       history: [],
       executionTime: 0,
       httpCalls: 0,
-      avgServerTime: 0,
       errorMessage: null,
       isRunning: false,
       showTable: false,
