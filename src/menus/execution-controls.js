@@ -1,0 +1,151 @@
+/* file : execution-controls.js
+MIT License
+
+Copyright (c) 2019 Thomas Minier
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+'use strict'
+
+import m from 'mithril'
+
+const MAX_BUCKET_SIZE = 10
+
+/**
+ * Stub the HTTP client to measure HTTP requests
+ */
+function _stubRequestClient (sageClient, spy, state) {
+  const sendRequest = sageClient._graph._httpClient._httpClient.post
+  sageClient._graph._httpClient._httpClient.post = (params, cb) => {
+    sendRequest(params, function (err, res, body) {
+      const now = Date.now()
+      state.executionTime = (now - state.startTime) / 1000
+      state.httpCalls = spy.nbHTTPCalls
+      state.avgServerTime = spy.avgResponseTime
+      cb(err, res, body)
+    })
+  }
+}
+
+// Control SPARQL query execution
+export default function ExecutionControls (state) {
+  let currentClient = null
+  let currentIterator = null
+  let subscription = null
+  let spy = null
+
+  function executeQuery () {
+    if (state.currentQueryValue !== null) {
+      // reset results array & page number
+      state.results = []
+      state.pageNum = 0
+      state.executionTime = 0
+      // bucket used to buffer results
+      let bucket = []
+      spy = new sage.Spy()
+      currentClient = new sage.SageClient(state.currentDataset, spy)
+      _stubRequestClient(currentClient, spy, state)
+      currentIterator = currentClient.execute(state.currentQueryValue)
+      state.isRunning = true
+      // open HTTP client & set starting time
+      currentClient._graph.open()
+      state.startTime = Date.now()
+      // start query processing
+      subscription = currentIterator.subscribe(function (b) {
+        if ('toObject' in b) {
+          b = b.toObject()
+        }
+        bucket.push(b)
+        if (bucket.length >= MAX_BUCKET_SIZE) {
+          bucket.forEach(v => {
+            state.results.push(v)
+          })
+          bucket = []
+          m.redraw()
+        }
+      }, console.error, function () {
+        // update stats after completion
+        const now = Date.now()
+        state.executionTime = (now - state.startTime) / 1000
+        state.httpCalls = spy.nbHTTPCalls
+        state.avgServerTime = spy.avgResponseTime
+        // cleanup
+        state.isRunning = false
+        subscription = null
+        // push last results
+        if (bucket.length > 0) {
+          bucket.forEach(v => {
+            state.results.push(v)
+          })
+        }
+        m.redraw()
+      })
+    }
+  }
+
+  function pauseQuery () {
+    console.log('pause')
+  }
+
+  function stopQuery () {
+    if (subscription !== null) {
+      setImmediate(function () {
+        subscription.unsubscribe()
+        currentClient._graph.close()
+        state.isRunning = false
+        m.redraw()
+      })
+    }
+  }
+
+  return {
+    view: function () {
+      return m('div', {class: 'QueryExecutor'}, [
+        m('div', {class: 'row'}, [
+          m('div', {class: 'col-md-12'}, [
+            (state.isRunning) ? m('span', [
+              m('button', {
+                class: 'btn btn-warning',
+                onclick: pauseQuery
+              }, [
+                m('i', {class: 'fas fa-stop'}),
+                ' Pause'
+              ]),
+              ' ',
+              m('button', {
+                class: 'btn btn-danger',
+                onclick: stopQuery
+              }, [
+                m('i', {class: 'fas fa-times-circle'}),
+                ' Stop'
+              ])
+            ]) : m('button', {
+              class: 'btn btn-success',
+              onclick: executeQuery
+            }, [
+              m('i', {class: 'fas fa-play'}),
+              ' Execute'
+            ])
+          ])
+        ])
+      ])
+    }
+  }
+}

@@ -1,7 +1,7 @@
-/* file : App.js
+/* file : app.js
 MIT License
 
-Copyright (c) 2018 Thomas Minier
+Copyright (c) 2019 Thomas Minier
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,22 +23,15 @@ SOFTWARE.
 */
 
 'use strict'
-import React, { Component } from 'react'
-import SparqlEditor from './sparql-editor/SparqlEditor.js'
-import './App.css'
+import m from 'mithril'
+import SageWidget from './sage-widget.js'
+import './app.css'
 
-class App extends Component {
-  render () {
-    return (
-      <div className='App'>
-        <SparqlEditor
-          url={this.props.url}
-          defaultServer={this.props.defaultServer}
-          defaultQuery={this.props.defaultQuery}
-          defaultQName={this.props.defaultQName} />
-      </div>
-    )
-  }
-}
+const root = document.getElementById('sage-widget')
+const attr = root.attributes
+const url = attr.getNamedItem('url').value
+const defaultServer = attr.getNamedItem('defaultServer') !== null ? attr.getNamedItem('defaultServer').value : ''
+const defaultQuery = attr.getNamedItem('defaultQuery') !== null ? attr.getNamedItem('defaultQuery').value : ''
+const defaultQName = attr.getNamedItem('defaultQName') !== null ? attr.getNamedItem('defaultQName').value : ''
 
-export default App
+m.mount(root, SageWidget(url, defaultServer, defaultQuery, defaultQName))
