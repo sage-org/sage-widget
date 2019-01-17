@@ -25,6 +25,7 @@ SOFTWARE.
 'use strict'
 
 import m from 'mithril'
+import GraphqlCompiler from '../graphql/compiler'
 
 const MAX_BUCKET_SIZE = 10
 
@@ -44,14 +45,17 @@ function _stubRequestClient (sageClient, spy, state) {
   }
 }
 
+const graphqlCompiler = new GraphqlCompiler()
+
 // Control SPARQL query execution
 export default function ExecutionControls (state) {
-  let currentClient = null
-  let currentIterator = null
-  let subscription = null
-  let spy = null
-
   function executeQuery () {
+    // In GraphQL mode: first compile the GraphQL query into SPARQL
+    if (state.graphqlMode) {
+      // TODO check if the GraphQL query and context are well formed
+      const context = JSON.parse(state.graphqlContext)
+      state.currentQueryValue = graphqlCompiler.compile(state.graphqlQuery, context['@context'])
+    }
     if (state.currentQueryValue !== null) {
       // reset results array & page number
       state.results = []
@@ -59,36 +63,38 @@ export default function ExecutionControls (state) {
       state.executionTime = 0
       // bucket used to buffer results
       let bucket = []
-      spy = new sage.Spy()
-      currentClient = new sage.SageClient(state.currentDataset, spy)
-      _stubRequestClient(currentClient, spy, state)
-      currentIterator = currentClient.execute(state.currentQueryValue)
+      state.spy = new sage.Spy()
+      state.currentClient = new sage.SageClient(state.currentDataset, state.spy)
+      _stubRequestClient(state.currentClient, state.spy, state)
+      state.currentIterator = state.currentClient.execute(state.currentQueryValue)
       state.isRunning = true
       // open HTTP client & set starting time
-      currentClient._graph.open()
+      state.currentClient._graph.open()
       state.startTime = Date.now()
       // start query processing
-      subscription = currentIterator.subscribe(function (b) {
-        if ('toObject' in b) {
-          b = b.toObject()
-        }
-        bucket.push(b)
-        if (bucket.length >= MAX_BUCKET_SIZE) {
-          bucket.forEach(v => {
-            state.results.push(v)
-          })
-          bucket = []
-          m.redraw()
+      state.subscription = state.currentIterator.subscribe(function (b) {
+        if (state.isRunning) {
+          if ('toObject' in b) {
+            b = b.toObject()
+          }
+          bucket.push(b)
+          if (bucket.length >= MAX_BUCKET_SIZE) {
+            bucket.forEach(v => {
+              state.results.push(v)
+            })
+            bucket = []
+            m.redraw()
+          }
         }
       }, console.error, function () {
         // update stats after completion
         const now = Date.now()
         state.executionTime = (now - state.startTime) / 1000
-        state.httpCalls = spy.nbHTTPCalls
-        state.avgServerTime = spy.avgResponseTime
+        state.httpCalls = state.spy.nbHTTPCalls
+        state.avgServerTime = state.spy.avgResponseTime
         // cleanup
         state.isRunning = false
-        subscription = null
+        state.subscription = null
         // push last results
         if (bucket.length > 0) {
           bucket.forEach(v => {
@@ -105,13 +111,10 @@ export default function ExecutionControls (state) {
   }
 
   function stopQuery () {
-    if (subscription !== null) {
-      setImmediate(function () {
-        subscription.unsubscribe()
-        currentClient._graph.close()
-        state.isRunning = false
-        m.redraw()
-      })
+    state.isRunning = false
+    if (state.subscription !== null) {
+      state.subscription.unsubscribe()
+      state.currentClient._graph.close()
     }
   }
 

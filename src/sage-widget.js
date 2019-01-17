@@ -28,6 +28,7 @@ import m from 'mithril'
 import DatasetMenu from './menus/dataset-menu.js'
 import QueryMenu from './menus/query-menu.js'
 import ExecutionControls from './menus/execution-controls'
+import GraphQLBoard from './menus/graphql-board'
 import ExecutionStats from './execution/execution-stats.js'
 import ResultsTable from './execution/results-table.js'
 import { fetchVoID } from './utils/void.js'
@@ -51,7 +52,21 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
     currentQueryName: defaultQName,
     isRunning: false,
     isPaused: false,
-    pageNum: 0
+    graphqlMode: false,
+    graphqlQuery: '',
+    graphqlContext: '',
+    pageNum: 0,
+    // execution related variables
+    currentClient: null,
+    currentIterator: null,
+    subscription: null,
+    spy: null
+  }
+
+  function switchMode (value) {
+    return function () {
+      data.graphqlMode = value
+    }
   }
   return {
     oncreate: function () {
@@ -83,9 +98,19 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
         m('div', { class: 'SparqlEditor' }, [
           m('form', [
             DatasetMenu(data),
-            QueryMenu(data),
-            // data.currentQuery != null ? m('p', data.currentQuery.value) : null
-            m('textarea', {id: 'yasqe-editor'})
+            m('ul', {class: 'nav nav-tabs', id: 'modeTab', role: 'tablist'}, [
+              m('li', {class: 'nav-item'}, m('a', {class: 'nav-link active', id: 'sparqlTab', 'data-toggle': 'tab', role: 'tab', href: '#sparqlMode', 'aria-controls': 'sparqlMode', 'aria-selected': true, onclick: switchMode(false)}, 'SPARQL')),
+              m('li', {class: 'nav-item'}, m('a', {class: 'nav-link', id: 'graphqlTab', 'data-toggle': 'tab', role: 'tab', href: '#graphqlMode', 'aria-controls': 'graphqlMode', 'aria-selected': true, onclick: switchMode(true)}, 'GraphQL'))
+            ]),
+            m('div', {class: 'tab-content', id: 'queryModeTab'}, [
+              m('div', {class: 'tab-pane fade show active', id: 'sparqlMode', role: 'tabpanel', 'aria-labelledby': 'sparqlTab'}, [
+                QueryMenu(data),
+                m('textarea', {id: 'yasqe-editor'})
+              ]),
+              m('div', {class: 'tab-pane fade', id: 'graphqlMode', role: 'tabpanel', 'aria-labelledby': 'graphqlTab'}, [
+                m(GraphQLBoard(data))
+              ])
+            ])
           ]),
           m(ExecutionControls(data)),
           m(ExecutionStats(data)),

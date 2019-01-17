@@ -42,7 +42,7 @@ export default function DatasetMenu (state) {
             'data-toggle': 'dropdown',
             'aria-haspopup': 'true',
             'aria-expanded': 'false'
-          }, 'Select preset query'),
+          }, 'Select a preset query'),
           m('div', {
             class: 'dropdown-menu scrollable-menu',
             'aria-labelledby': 'dropdownMenuButton'
