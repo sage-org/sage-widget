@@ -107,6 +107,8 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
             m('div', {class: 'tab-content', id: 'queryModeTab'}, [
               m('div', {class: 'tab-pane fade show active', id: 'sparqlMode', role: 'tabpanel', 'aria-labelledby': 'sparqlTab'}, [
                 QueryMenu(data),
+                m('br'),
+                m('strong', 'or write your own SPARQL query'),
                 m('textarea', {id: 'yasqe-editor'})
               ]),
               m('div', {class: 'tab-pane fade', id: 'graphqlMode', role: 'tabpanel', 'aria-labelledby': 'graphqlTab'}, [

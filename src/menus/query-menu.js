@@ -30,7 +30,7 @@ import m from 'mithril'
 export default function DatasetMenu (state) {
   return m('div', {class: 'form-group'}, [
     m('label', {for: 'serverInput'}, [
-      m('strong', 'Preset query:')
+      m('strong', 'Select a preset query')
     ]),
     m('div', {class: 'input-group'}, [
       m('div', {class: 'input-group-prepend'}, [
@@ -42,12 +42,12 @@ export default function DatasetMenu (state) {
             'data-toggle': 'dropdown',
             'aria-haspopup': 'true',
             'aria-expanded': 'false'
-          }, 'Select a preset query'),
+          }, 'List of preset queries'),
           m('div', {
             class: 'dropdown-menu scrollable-menu',
             'aria-labelledby': 'dropdownMenuButton'
           }, state.queries.map(info => m('div', [
-            m('h6', info.dataset),
+            m('h6', m('strong', info.dataset)),
             info.queries.map(q => m('button', {
               class: 'dropdown-item',
               onclick: e => {
@@ -64,6 +64,7 @@ export default function DatasetMenu (state) {
       ]),
       m('input', {
         class: 'form-control',
+        disabled: true,
         id: 'serverInput',
         type: 'text',
         value: state.currentQueryName

@@ -30,7 +30,7 @@ import m from 'mithril'
 export default function DatasetMenu (state) {
   return m('div', {class: 'form-group'}, [
     m('label', {for: 'serverInput'}, [
-      m('strong', 'Server:')
+      m('strong', 'Select a RDF dataset:')
     ]),
     m('div', {class: 'input-group'}, [
       m('div', {class: 'input-group-prepend'}, [
@@ -42,7 +42,7 @@ export default function DatasetMenu (state) {
             'data-toggle': 'dropdown',
             'aria-haspopup': 'true',
             'aria-expanded': 'false'
-          }, 'Select server'),
+          }, 'Available datasets'),
           m('div', {
             class: 'dropdown-menu scrollable-menu',
             'aria-labelledby': 'dropdownMenuButton'

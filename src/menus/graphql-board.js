@@ -36,6 +36,7 @@ export default function GraphQLBoard (state) {
             m('textarea', {
               class: 'form-control',
               id: 'graphqlInputQuery',
+              placeholder: 'Write a GraphQL query',
               rows: 6,
               value: state.graphqlQuery,
               oninput: function (e) {
@@ -43,10 +44,15 @@ export default function GraphQLBoard (state) {
               }})
           ]),
           m('div', {class: 'form-group'}, [
-            m('label', {for: 'graphqlInputContext'}, m('strong', 'JSON-LD context')),
+            m('label', {for: 'graphqlInputContext'}, [
+              m('strong', 'JSON-LD context'),
+              ' ',
+              m('small', m('a', {href: 'https://gist.github.com/rubensworks/9d6eccce996317677d71944ed1087ea6', target: '_blank'}, 'Why do I need this?'))
+            ]),
             m('textarea', {
               class: 'form-control',
               id: 'graphqlInputContext',
+              placeholder: 'Write a JSON-LD context',
               rows: 6,
               value: state.graphqlContext,
               oninput: function (e) {
