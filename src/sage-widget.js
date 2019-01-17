@@ -57,10 +57,12 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
     graphqlContext: '',
     pageNum: 0,
     // execution related variables
+    pauseStatus: 'Pause',
     currentClient: null,
     currentIterator: null,
     subscription: null,
-    spy: null
+    spy: null,
+    bucket: []
   }
 
   function switchMode (value) {

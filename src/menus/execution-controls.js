@@ -62,52 +62,62 @@ export default function ExecutionControls (state) {
       state.pageNum = 0
       state.executionTime = 0
       // bucket used to buffer results
-      let bucket = []
+      state.bucket = []
       state.spy = new sage.Spy()
       state.currentClient = new sage.SageClient(state.currentDataset, state.spy)
       _stubRequestClient(state.currentClient, state.spy, state)
       state.currentIterator = state.currentClient.execute(state.currentQueryValue)
-      state.isRunning = true
-      // open HTTP client & set starting time
-      state.currentClient._graph.open()
+      // set starting time
       state.startTime = Date.now()
-      // start query processing
-      state.subscription = state.currentIterator.subscribe(function (b) {
-        if (state.isRunning) {
-          if ('toObject' in b) {
-            b = b.toObject()
-          }
-          bucket.push(b)
-          if (bucket.length >= MAX_BUCKET_SIZE) {
-            bucket.forEach(v => {
-              state.results.push(v)
-            })
-            bucket = []
-            m.redraw()
-          }
-        }
-      }, console.error, function () {
-        // update stats after completion
-        const now = Date.now()
-        state.executionTime = (now - state.startTime) / 1000
-        state.httpCalls = state.spy.nbHTTPCalls
-        state.avgServerTime = state.spy.avgResponseTime
-        // cleanup
-        state.isRunning = false
-        state.subscription = null
-        // push last results
-        if (bucket.length > 0) {
-          bucket.forEach(v => {
-            state.results.push(v)
-          })
-        }
-        m.redraw()
-      })
+      _subscribe()
     }
   }
 
+  function _subscribe () {
+    // open HTTP client & start query processing
+    state.currentClient._graph.open()
+    state.isRunning = true
+    state.subscription = state.currentIterator.subscribe(function (b) {
+      if (state.isRunning) {
+        if ('toObject' in b) {
+          b = b.toObject()
+        }
+        state.bucket.push(b)
+        if (state.bucket.length >= MAX_BUCKET_SIZE) {
+          state.bucket.forEach(v => {
+            state.results.push(v)
+          })
+          state.bucket = []
+          m.redraw()
+        }
+      }
+    }, console.error, function () {
+      // update stats after completion
+      const now = Date.now()
+      state.executionTime = (now - state.startTime) / 1000
+      state.httpCalls = state.spy.nbHTTPCalls
+      state.avgServerTime = state.spy.avgResponseTime
+      // cleanup
+      state.isRunning = false
+      state.subscription = null
+      // push last results
+      if (state.bucket.length > 0) {
+        state.bucket.forEach(v => {
+          state.results.push(v)
+        })
+      }
+      m.redraw()
+    })
+  }
+
   function pauseQuery () {
-    console.log('pause')
+    if (state.pauseStatus === 'Pause') {
+      stopQuery()
+      state.pauseStatus = 'Resume'
+    } else {
+      _subscribe()
+      state.pauseStatus = 'Pause'
+    }
   }
 
   function stopQuery () {
@@ -123,13 +133,16 @@ export default function ExecutionControls (state) {
       return m('div', {class: 'QueryExecutor'}, [
         m('div', {class: 'row'}, [
           m('div', {class: 'col-md-12'}, [
-            (state.isRunning) ? m('span', [
+            (state.isRunning || state.pauseStatus === 'Resume') ? m('span', [
               m('button', {
                 class: 'btn btn-warning',
                 onclick: pauseQuery
-              }, [
+              }, (state.pauseStatus === 'Pause') ? [
                 m('i', {class: 'fas fa-stop'}),
                 ' Pause'
+              ] : [
+                m('i', {class: 'fas fa-stop'}),
+                ' Resume'
               ]),
               ' ',
               m('button', {
