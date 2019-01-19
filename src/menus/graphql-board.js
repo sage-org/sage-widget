@@ -25,23 +25,63 @@ SOFTWARE.
 'use strict'
 
 import m from 'mithril'
+import CodeFlask from 'codeflask'
+
+// GraphQL language definition for Prism
+const PRISM_GRAPHQL_LANG = {
+  comment: /#.*/,
+  string: {
+    pattern: /"(?:\\.|[^\\"\r\n])*"/,
+    greedy: true
+  },
+  number: /(?:\B-|\b)\d+(?:\.\d+)?(?:e[+-]?\d+)?\b/i,
+  boolean: /\b(?:true|false)\b/,
+  variable: /\$[a-z_]\w*/i,
+  directive: {
+    pattern: /@[a-z_]\w*/i,
+    alias: 'function'
+  },
+  'attr-name': /[a-z_]\w*(?=\s*(?:\([^()]*\))?:)/i,
+  keyword: [
+    {
+      pattern: /(fragment\s+(?!on)[a-z_]\w*\s+|\.{3}\s*)on\b/,
+      lookbehind: true
+    },
+    /\b(?:query|fragment|mutation)\b/
+  ],
+  operator: /!|=|\.{3}/,
+  punctuation: /[!(){}[]:=,]/
+}
 
 export default function GraphQLBoard (state) {
   return {
+    oncreate: function () {
+      // create GraphQL query editor
+      const graphqlEditor = new CodeFlask('#graphqlInputQuery', {
+        language: 'graphql',
+        lineNumbers: true
+      })
+      graphqlEditor.addLanguage('graphql', PRISM_GRAPHQL_LANG)
+      graphqlEditor.updateCode(state.graphqlQuery)
+      graphqlEditor.onUpdate(code => {
+        state.graphqlQuery = code
+      })
+      // create JSON-LD context editor
+      const contextEditor = new CodeFlask('#graphqlInputContext', {
+        language: 'js',
+        lineNumbers: true
+      })
+      contextEditor.updateCode(state.graphqlContext)
+      contextEditor.onUpdate(code => {
+        state.graphqlContext = code
+      })
+    },
     view: function () {
       return m('div', [
         m('form', [
           m('div', {class: 'form-group'}, [
             m('label', {for: 'graphqlInputQuery'}, m('strong', 'GraphQL query')),
-            m('textarea', {
-              class: 'form-control',
-              id: 'graphqlInputQuery',
-              placeholder: 'Write a GraphQL query',
-              rows: 6,
-              value: state.graphqlQuery,
-              oninput: function (e) {
-                state.graphqlQuery = e.target.value
-              }})
+            m('div', {class: 'code-editor', id: 'graphqlInputQuery'})
           ]),
           m('div', {class: 'form-group'}, [
             m('label', {for: 'graphqlInputContext'}, [
@@ -49,15 +89,7 @@ export default function GraphQLBoard (state) {
               ' ',
               m('small', m('a', {href: 'https://gist.github.com/rubensworks/9d6eccce996317677d71944ed1087ea6', target: '_blank'}, 'Why do I need this?'))
             ]),
-            m('textarea', {
-              class: 'form-control',
-              id: 'graphqlInputContext',
-              placeholder: 'Write a JSON-LD context',
-              rows: 6,
-              value: state.graphqlContext,
-              oninput: function (e) {
-                state.graphqlContext = e.target.value
-              }})
+            m('div', {class: 'code-editor', id: 'graphqlInputContext'})
           ])
         ])
       ])

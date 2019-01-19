@@ -53,8 +53,8 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
     isRunning: false,
     isPaused: false,
     graphqlMode: false,
-    graphqlQuery: '',
-    graphqlContext: '',
+    graphqlQuery: 'query {\n\n}',
+    graphqlContext: '{\n  "@context": {\n\n  }\n}',
     pageNum: 0,
     // execution related variables
     pauseStatus: 'Pause',
