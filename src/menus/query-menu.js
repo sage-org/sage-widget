@@ -29,6 +29,14 @@ import { FEATURES } from '../utils/features.js'
 
 let filterQueryPredicate = function () { return true }
 
+function filteringFunction (pred) {
+  return function (e) {
+    e.preventDefault()
+    switchActiveFilter(this)
+    filterQueryPredicate = pred
+  }
+}
+
 function switchActiveFilter (newActive) {
   $('.nav-queries.nav-link.active').removeClass('active')
   $(newActive).addClass('active')
@@ -36,7 +44,9 @@ function switchActiveFilter (newActive) {
 
 function searchBy (feature) {
   return function (dataset, q) {
-    return q.features.findIndex(feature) > -1
+    return q.features.findIndex(function (x) {
+      return x === feature
+    }) > -1
   }
 }
 
@@ -68,29 +78,20 @@ export default function DatasetMenu (state) {
               m('div', {class: 'row'}, [
                 m('div', {class: 'col-md-12'}, [
                   // dataset names
-                  m('h5', [m('i', {class: 'fas fa-search'}), ' Filter by RDF Dataset']),
+                  m('h5', [m('i', {class: 'fas fa-search'}), ' Filter by']),
+                  m('h6', [m('i', {class: 'fas fa-database'}), ' RDF Dataset']),
                   m('ul', {class: 'nav nav-pills'}, [
                     m('li', {class: 'nav-item'}, [
                       m('a', {
                         href: '#',
                         class: 'nav-queries nav-link active',
-                        onclick: function (e) {
-                          e.preventDefault()
-                          switchActiveFilter(this)
-                          filterQueryPredicate = function () { return true }
-                        }}, 'all')
+                        onclick: filteringFunction(() => true)}, 'all')
                     ]),
                     state.queries.map(info => {
                       return m('li', {class: 'nav-item'}, m('a', {
                         href: '#',
                         class: 'nav-queries nav-link',
-                        onclick: function (e) {
-                          e.preventDefault()
-                          switchActiveFilter(this)
-                          filterQueryPredicate = function (dataset) {
-                            return dataset === info.dataset
-                          }
-                        }
+                        onclick: filteringFunction(dataset => dataset === info.dataset)
                       }, info.dataset))
                     })
                   ])
@@ -99,32 +100,24 @@ export default function DatasetMenu (state) {
               // filter by SPARQL feature
               m('div', {class: 'row'}, [
                 m('div', {class: 'col-md-12'}, [
-                  m('h5', [m('i', {class: 'fas fa-search'}), ' Filter by SPARQL features']),
+                  m('h6', [m('i', {class: 'fas fa-drafting-compass'}), ' SPARQL features']),
                   m('ul', {class: 'nav nav-pills'}, [
-                    m('li', {class: 'nav-item'}, [
-                      // all
-                      m('a', {
-                        href: '#',
-                        class: 'nav-queries nav-link active',
-                        onclick: function (e) {
-                          e.preventDefault()
-                          switchActiveFilter(this)
-                          filterQueryPredicate = function () { return true }
-                        }}, 'all'),
-                      // BGP
-                      m('a', {
-                        href: '#',
-                        class: 'nav-queries nav-link active',
-                        onclick: function (e) {
-                          e.preventDefault()
-                          switchActiveFilter(this)
-                          filterQueryPredicate = searchBy(FEATURES.BGP)
-                        }}, 'Basic Graph patterns')
-                    ])
+                    // Optionals
+                    m('li', {class: 'nav-item'}, m('a', {
+                      href: '#',
+                      class: 'nav-queries nav-link',
+                      onclick: filteringFunction(searchBy(FEATURES.SERVICE))}, 'OPTIONAL')),
+                    // Services
+                    m('li', {class: 'nav-item'}, m('a', {
+                      href: '#',
+                      class: 'nav-queries nav-link',
+                      onclick: filteringFunction(searchBy(FEATURES.SERVICE))
+                    }, 'SERVICE'))
                   ])
                 ])
               ]),
               // filtered SPARQL queries
+              m('hr'),
               m('div', {class: 'row'}, [
                 m('div', {class: 'col-md-12'}, [
                   m('div', [
