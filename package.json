@@ -29,7 +29,6 @@
   "homepage": "https://github.com/sage-org/sage-client#readme",
   "dependencies": {
     "codeflask": "^1.4.0",
-    "graphql-ast-types": "^1.0.2",
     "graphql-to-sparql": "^1.4.1",
     "mithril": "^1.1.6",
     "sage-client": "^1.2.1",
