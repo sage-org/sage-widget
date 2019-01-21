@@ -25,12 +25,19 @@ SOFTWARE.
 'use strict'
 
 import m from 'mithril'
+import { FEATURES } from '../utils/features.js'
 
 let filterQueryPredicate = function () { return true }
 
 function switchActiveFilter (newActive) {
   $('.nav-queries.nav-link.active').removeClass('active')
   $(newActive).addClass('active')
+}
+
+function searchBy (feature) {
+  return function (dataset, q) {
+    return q.features.findIndex(feature) > -1
+  }
 }
 
 /**
@@ -57,7 +64,7 @@ export default function DatasetMenu (state) {
           // body
           m('div', {class: 'modal-body'}, [
             m('div', {class: 'container'}, [
-              // filter options
+              // filter by dataset name
               m('div', {class: 'row'}, [
                 m('div', {class: 'col-md-12'}, [
                   // dataset names
@@ -86,6 +93,34 @@ export default function DatasetMenu (state) {
                         }
                       }, info.dataset))
                     })
+                  ])
+                ])
+              ]),
+              // filter by SPARQL feature
+              m('div', {class: 'row'}, [
+                m('div', {class: 'col-md-12'}, [
+                  m('h5', [m('i', {class: 'fas fa-search'}), ' Filter by SPARQL features']),
+                  m('ul', {class: 'nav nav-pills'}, [
+                    m('li', {class: 'nav-item'}, [
+                      // all
+                      m('a', {
+                        href: '#',
+                        class: 'nav-queries nav-link active',
+                        onclick: function (e) {
+                          e.preventDefault()
+                          switchActiveFilter(this)
+                          filterQueryPredicate = function () { return true }
+                        }}, 'all'),
+                      // BGP
+                      m('a', {
+                        href: '#',
+                        class: 'nav-queries nav-link active',
+                        onclick: function (e) {
+                          e.preventDefault()
+                          switchActiveFilter(this)
+                          filterQueryPredicate = searchBy(FEATURES.BGP)
+                        }}, 'Basic Graph patterns')
+                    ])
                   ])
                 ])
               ]),

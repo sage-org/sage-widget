@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 'use strict'
+import { extractFeatures } from './features.js'
 import { DCTERMS, HYDRA, SAGE, SD, RDF, RDFS } from './rdf.js'
 import { groupBy, map, sortBy } from 'lodash'
 
@@ -47,6 +48,7 @@ export function fetchVoID (url) {
     })
 }
 
+// format a VoID description to the format used by the SaGe widget
 function formatVoID (url, descriptor) {
   const root = descriptor.get(url)
   const graphCollec = root[SD('availableGraphs')][0]
@@ -73,11 +75,13 @@ function formatVoID (url, descriptor) {
             url: g[HYDRA('entrypoint')][0]['@id'],
             dataset: g[DCTERMS('title')][0]['@value'],
             name: q[RDFS('label')][0]['@value'],
-            value: q[RDF('value')][0]['@value']
+            value: q[RDF('value')][0]['@value'],
+            features: extractFeatures(q[RDF('value')][0]['@value'])
           })
         })
     }
   })
+  // group and sort queries by dataset
   queries = groupBy(queries, 'dataset')
   queries = sortBy(map(queries, function (v, k) {
     return {
