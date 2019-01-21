@@ -38,6 +38,10 @@ function lastPage (results) {
   return Math.floor(results.length / PAGE_SIZE)
 }
 
+/**
+* Display query results
+* @author Thomas Minier
+*/
 export default function ResultsTable (state) {
   return {
     view: function () {

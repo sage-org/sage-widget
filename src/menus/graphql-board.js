@@ -53,6 +53,10 @@ const PRISM_GRAPHQL_LANG = {
   punctuation: /[!(){}[]:=,]/
 }
 
+/**
+* Menus used to input GraphQL queries
+* @author Thomas Minier
+*/
 export default function GraphQLBoard (state) {
   return {
     oncreate: function () {

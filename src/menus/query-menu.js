@@ -26,7 +26,10 @@ SOFTWARE.
 
 import m from 'mithril'
 
-// Menu used to select a preset query
+/**
+* Menu used to select a preset SPARQL query, loaded from a server VoID description
+* @author Thomas Minier
+*/
 export default function DatasetMenu (state) {
   return m('div', {class: 'form-group'}, [
     m('label', {for: 'serverInput'}, [

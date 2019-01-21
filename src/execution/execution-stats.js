@@ -26,7 +26,10 @@ SOFTWARE.
 
 import m from 'mithril'
 
-// display query execution statistics
+/**
+* Display query execution statistics
+* @author Thomas Minier
+*/
 export default function ExecutionStats (state) {
   return {
     view: function () {

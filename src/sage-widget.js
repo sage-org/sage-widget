@@ -37,10 +37,8 @@ import 'yasgui-yasqe/dist/yasqe.min.css'
 // import sortBy from 'lodash.sortby'
 
 /**
-* A SPARQL Query editor, built using YASQE
-* @extends Component
+* A SPARQL/GraphQL widget for querying SaGe servers
 * @author Thomas Minier
-* @see http://yasqe.yasgui.org/
 */
 export default function SageWidget (url, defaultServer, defaultQuery, defaultQName) {
   const data = {

@@ -47,7 +47,10 @@ function _stubRequestClient (sageClient, spy, state) {
 
 const graphqlCompiler = new GraphqlCompiler()
 
-// Control SPARQL query execution
+/**
+* Controls for query execution
+* @author Thomas Minier
+*/
 export default function ExecutionControls (state) {
   function compileShow () {
     if (state.graphqlMode) {
