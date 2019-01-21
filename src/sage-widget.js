@@ -53,8 +53,8 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
     isRunning: false,
     isPaused: false,
     graphqlMode: false,
-    graphqlQuery: 'query {\n\n}',
-    graphqlContext: '{\n  "@context": {\n\n  }\n}',
+    graphqlQuery: 'query {\n  name\n}',
+    graphqlContext: '{\n  "@context": {\n    "name": "http://xmlns.com/foaf/0.1/name"\n  }\n}',
     pageNum: 0,
     // execution related variables
     pauseStatus: 'Pause',
@@ -72,12 +72,7 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
   }
   return {
     oncreate: function () {
-      // if the query was shared using YASQE, then a query is set in url#query=...
-      const pageUrl = window.location.href
-      if (pageUrl.includes('#query=')) {
-        const index = pageUrl.indexOf('#query=')
-        defaultQuery = decodeURIComponent(pageUrl.substring(index + 7).replace(/\+/gi, ' '))
-      }
+      let isShared = false
       // init widget using the server's VoID description
       fetchVoID(url)
         .then(voID => {
@@ -87,12 +82,18 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
           m.redraw()
         })
         .catch(console.error)
-        // build YASQE query widget
-      data.yasqe = YASQE.fromTextArea(document.getElementById('yasqe-editor'))
-      data.yasqe.setValue(defaultQuery)
+      // build YASQE query widget
+      data.sparqlEditor = YASQE.fromTextArea(document.getElementById('yasqe-editor'))
+      if (!isShared) {
+        data.sparqlEditor.setValue(defaultQuery)
+      }
       // keep SPARQL query updated in component state
-      data.yasqe.on('change', args => {
+      data.sparqlEditor.on('change', args => {
         data.currentQueryValue = args.getQueryWithValues()
+      })
+      // handle weird refresh bug with YASQE + bootstrap tabs
+      $('#sparqlTab').on('shown.bs.tab', function () {
+        data.sparqlEditor.setValue(data.currentQueryValue)
       })
     },
     view: function () {

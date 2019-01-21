@@ -49,6 +49,17 @@ const graphqlCompiler = new GraphqlCompiler()
 
 // Control SPARQL query execution
 export default function ExecutionControls (state) {
+  function compileShow () {
+    if (state.graphqlMode) {
+      // TODO check if the GraphQL query and context are well formed
+      const context = JSON.parse(state.graphqlContext)
+      state.currentQueryValue = graphqlCompiler.compile(state.graphqlQuery, context['@context'])
+      state.currentQueryName = 'Generated from a GraphQL query'
+      state.graphqlMode = false
+      $('#sparqlTab').tab('show')
+    }
+  }
+
   function executeQuery () {
     // In GraphQL mode: first compile the GraphQL query into SPARQL
     if (state.graphqlMode) {
@@ -152,12 +163,22 @@ export default function ExecutionControls (state) {
                 m('i', {class: 'fas fa-times-circle'}),
                 ' Stop'
               ])
-            ]) : m('button', {
-              class: 'btn btn-success',
-              onclick: executeQuery
-            }, [
-              m('i', {class: 'fas fa-play'}),
-              ' Execute'
+            ]) : m('span', [
+              m('button', {
+                class: 'btn btn-success',
+                onclick: executeQuery
+              }, [
+                m('i', {class: 'fas fa-play'}),
+                ' Execute'
+              ]),
+              ' ',
+              (state.graphqlMode) ? m('button', {
+                class: 'btn btn-primary',
+                onclick: compileShow
+              }, [
+                m('i', {class: 'fas fa-cogs'}),
+                ' Compile to SPARQL'
+              ]) : null
             ])
           ])
         ])

@@ -54,7 +54,8 @@
       "chai"
     ],
     "globals": [
-      "sage"
+      "sage",
+      "$"
     ]
   }
 }

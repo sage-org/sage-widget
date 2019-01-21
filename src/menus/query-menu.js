@@ -56,7 +56,7 @@ export default function DatasetMenu (state) {
                 state.currentQueryName = q.name
                 state.currentDataset = q.url
                 state.currentQueryValue = q.value
-                state.yasqe.setValue(q.value)
+                state.sparqlEditor.setValue(q.value)
               }
             }, q.name))
           ])))
