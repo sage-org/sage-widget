@@ -26,52 +26,129 @@ SOFTWARE.
 
 import m from 'mithril'
 
+let filterQueryPredicate = function () { return true }
+
+function switchActiveFilter (newActive) {
+  $('.nav-queries.nav-link.active').removeClass('active')
+  $(newActive).addClass('active')
+}
+
 /**
 * Menu used to select a preset SPARQL query, loaded from a server VoID description
 * @author Thomas Minier
 */
 export default function DatasetMenu (state) {
-  return m('div', {class: 'form-group'}, [
-    m('label', {for: 'serverInput'}, [
-      m('strong', 'Select a preset query')
-    ]),
-    m('div', {class: 'input-group'}, [
-      m('div', {class: 'input-group-prepend'}, [
-        m('div', {class: 'dropdown'}, [
-          m('button', {
-            id: 'dropdownMenuButton',
-            class: 'btn btn-outline-secondary dropdown-toggle',
-            type: 'button',
-            'data-toggle': 'dropdown',
-            'aria-haspopup': 'true',
-            'aria-expanded': 'false'
-          }, 'List of preset queries'),
-          m('div', {
-            class: 'dropdown-menu scrollable-menu',
-            'aria-labelledby': 'dropdownMenuButton'
-          }, state.queries.map(info => m('div', [
-            m('h6', m('strong', info.dataset)),
-            info.queries.map(q => m('button', {
-              class: 'dropdown-item',
-              onclick: e => {
-                e.preventDefault()
-                // set target dataset
-                state.currentQueryName = q.name
-                state.currentDataset = q.url
-                state.currentQueryValue = q.value
-                state.sparqlEditor.setValue(q.value)
-              }
-            }, q.name))
-          ])))
+  return m('div', [
+    // modal
+    m('div', {
+      class: 'modal fade',
+      id: 'presetQueryMenu',
+      tabindex: '-1',
+      role: 'dialog',
+      'aria-labelledby': 'presetQueryMenuLabel',
+      'aria-hidden': true
+    }, [
+      m('div', {class: 'modal-dialog', role: 'document'}, [
+        m('div', {class: 'modal-content'}, [
+          // header
+          m('div', {class: 'modal-header'}, [
+            m('button', {class: 'close', 'data-dismiss': 'modal', 'aria-label': 'close'}, m('i', {class: 'fas fa-times fa-xs'}))
+          ]),
+          // body
+          m('div', {class: 'modal-body'}, [
+            m('div', {class: 'container'}, [
+              // filter options
+              m('div', {class: 'row'}, [
+                m('div', {class: 'col-md-12'}, [
+                  // dataset names
+                  m('h5', [m('i', {class: 'fas fa-search'}), ' Filter by RDF Dataset']),
+                  m('ul', {class: 'nav nav-pills'}, [
+                    m('li', {class: 'nav-item'}, [
+                      m('a', {
+                        href: '#',
+                        class: 'nav-queries nav-link active',
+                        onclick: function (e) {
+                          e.preventDefault()
+                          switchActiveFilter(this)
+                          filterQueryPredicate = function () { return true }
+                        }}, 'all')
+                    ]),
+                    state.queries.map(info => {
+                      return m('li', {class: 'nav-item'}, m('a', {
+                        href: '#',
+                        class: 'nav-queries nav-link',
+                        onclick: function (e) {
+                          e.preventDefault()
+                          switchActiveFilter(this)
+                          filterQueryPredicate = function (dataset) {
+                            return dataset === info.dataset
+                          }
+                        }
+                      }, info.dataset))
+                    })
+                  ])
+                ])
+              ]),
+              // filtered SPARQL queries
+              m('div', {class: 'row'}, [
+                m('div', {class: 'col-md-12'}, [
+                  m('div', [
+                    m('h5', [m('i', {class: 'fas fa-list-ul'}), ' SPARQL queries']),
+                    m('ul', {class: 'list-group'}, state.queries.map(info => {
+                      return info.queries.map(q => {
+                        if (!filterQueryPredicate(info.dataset, q)) {
+                          return null
+                        }
+                        return m('li', {class: 'list-group-item'}, m('a', {
+                          href: '#',
+                          onclick: function (e) {
+                            e.preventDefault()
+                            // set target dataset
+                            state.currentQueryName = q.name
+                            // set query
+                            state.currentDataset = q.url
+                            state.currentQueryValue = q.value
+                            state.sparqlEditor.setValue(q.value)
+                            // close modal
+                            $('#presetQueryMenu').modal('hide')
+                          }
+                        }, q.name))
+                      })
+                    }))
+                  ])
+                ])
+              ])
+            ])
+          ])
         ])
+      ])
+    ]),
+    // display query selection button + selected query
+    m('div', {class: 'form-group'}, [
+      m('label', {for: 'serverInput'}, [
+        m('strong', 'Select a preset query')
       ]),
-      m('input', {
-        class: 'form-control',
-        disabled: true,
-        id: 'serverInput',
-        type: 'text',
-        value: state.currentQueryName
-      })
+      m('div', {class: 'input-group'}, [
+        m('div', {class: 'input-group-prepend'}, [
+          // button to show modal
+          m('button', {
+            type: 'button',
+            class: 'btn btn-primary',
+            'data-toggle': 'modal',
+            'data-target': '#presetQueryMenu'
+          }, [
+            m('i', {class: 'fas fa-eye'}),
+            ' Show preset queries'
+          ])
+        ]),
+        m('input', {
+          class: 'form-control',
+          disabled: true,
+          id: 'serverInput',
+          type: 'text',
+          value: state.currentQueryName
+        })
+      ])
     ])
   ])
 }

@@ -34,7 +34,6 @@ import ResultsTable from './execution/results-table.js'
 import { fetchVoID } from './utils/void.js'
 import YASQE from 'yasgui-yasqe'
 import 'yasgui-yasqe/dist/yasqe.min.css'
-// import sortBy from 'lodash.sortby'
 
 /**
 * A SPARQL/GraphQL widget for querying SaGe servers
