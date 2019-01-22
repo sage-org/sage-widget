@@ -28,10 +28,9 @@
   },
   "homepage": "https://github.com/sage-org/sage-client#readme",
   "dependencies": {
-    "lodash.sortby": "^4.7.0",
-    "react": "^16.6.0",
-    "react-dom": "^16.6.3",
-    "react-table": "^6.8.6",
+    "codeflask": "^1.4.0",
+    "graphql-to-sparql": "^1.4.1",
+    "mithril": "^1.1.6",
     "sage-client": "^1.2.1",
     "yasgui-yasqe": "^2.11.22"
   },
@@ -39,7 +38,6 @@
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
     "babel-preset-env": "^1.7.0",
-    "babel-preset-react": "^6.24.1",
     "css-loader": "^1.0.1",
     "mini-css-extract-plugin": "^0.4.4",
     "standard": "^11.0.1",
@@ -55,7 +53,8 @@
       "chai"
     ],
     "globals": [
-      "sage"
+      "sage",
+      "$"
     ]
   }
 }

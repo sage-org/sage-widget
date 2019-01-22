@@ -1,7 +1,7 @@
-/* file : App.js
+/* file : compiler.js
 MIT License
 
-Copyright (c) 2018 Thomas Minier
+Copyright (c) 2019 Thomas Minier
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,22 +23,27 @@ SOFTWARE.
 */
 
 'use strict'
-import React, { Component } from 'react'
-import SparqlEditor from './sparql-editor/SparqlEditor.js'
-import './App.css'
 
-class App extends Component {
-  render () {
-    return (
-      <div className='App'>
-        <SparqlEditor
-          url={this.props.url}
-          defaultServer={this.props.defaultServer}
-          defaultQuery={this.props.defaultQuery}
-          defaultQName={this.props.defaultQName} />
-      </div>
-    )
+import { Converter } from 'graphql-to-sparql'
+import { toSparql } from 'sparqlalgebrajs'
+
+/**
+ * Compiler for GraphQL queries to SPARQL queries
+ * @author Thomas Minier
+ */
+export default class GraphqlCompiler {
+  constructor () {
+    this._converter = new Converter()
+  }
+
+  /**
+   * Compile a GraphQL query to a SPARQL query
+   * @param  {string} query - GraphQL query
+   * @param  {object} context - JSON-LD context
+   * @return {string} The equivalent SPARQL query
+   */
+  compile (query, context) {
+    const algebra = this._converter.graphqlToSparqlAlgebra(query, context)
+    return toSparql(algebra)
   }
 }
-
-export default App

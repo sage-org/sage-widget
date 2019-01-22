@@ -1,7 +1,7 @@
-/* file : index.js
+/* file : features.js
 MIT License
 
-Copyright (c) 2018 Thomas Minier
+Copyright (c) 2019 Thomas Minier
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,14 +23,33 @@ SOFTWARE.
 */
 
 'use strict'
-import React from 'react'
-import ReactDOM from 'react-dom'
-import App from './App'
 
-const root = document.getElementById('sage-widget')
-const attr = root.attributes
-const url = attr.getNamedItem('url').value
-const defaultServer = attr.getNamedItem('defaultServer') !== null ? attr.getNamedItem('defaultServer').value : ''
-const defaultQuery = attr.getNamedItem('defaultQuery') !== null ? attr.getNamedItem('defaultQuery').value : ''
-const defaultQName = attr.getNamedItem('defaultQName') !== null ? attr.getNamedItem('defaultQName').value : ''
-ReactDOM.render(<App url={url} defaultServer={defaultServer} defaultQuery={defaultQuery} defaultQName={defaultQName} />, root)
+export const FEATURES = {
+  DISTINCT: 'feature_distinct',
+  OPTIONAL: 'feature_optional',
+  SERVICE: 'feature_service',
+  LIMIT: 'feature_limit',
+  FILTER: 'feature_filter'
+}
+
+// extract features from a SPARQL query
+export function extractFeatures (query) {
+  const q = query.toLowerCase()
+  const features = []
+  if (q.includes('service')) {
+    features.push(FEATURES.SERVICE)
+  }
+  if (q.includes('distinct')) {
+    features.push(FEATURES.DISTINCT)
+  }
+  if (q.includes('optional')) {
+    features.push(FEATURES.OPTIONAL)
+  }
+  if (q.includes('filter')) {
+    features.push(FEATURES.FILTER)
+  }
+  if (q.includes('limit')) {
+    features.push(FEATURES.LIMIT)
+  }
+  return features
+}

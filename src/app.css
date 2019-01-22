@@ -1,0 +1,23 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+.SparqlEditor {
+  text-align: left;
+}
+
+.scrollable-menu {
+    height: auto;
+    max-height: 200px;
+    overflow-x: hidden;
+}
+
+.code-editor {
+  position: relative;
+  width: 100%;
+  height: 175px;
+  /* box-shadow: 0 10px 40px rgba(0, 0, 0, 0.16); */
+  border: 0.2mm solid grey;
+}
