@@ -30,8 +30,12 @@ import './app.css'
 const root = document.getElementById('sage-widget')
 const attr = root.attributes
 const url = attr.getNamedItem('url').value
-const defaultServer = attr.getNamedItem('defaultServer') !== null ? attr.getNamedItem('defaultServer').value : ''
-const defaultQuery = attr.getNamedItem('defaultQuery') !== null ? attr.getNamedItem('defaultQuery').value : ''
-const defaultQName = attr.getNamedItem('defaultQName') !== null ? attr.getNamedItem('defaultQName').value : ''
+if (attr.getNamedItem('url') === null) {
+  throw new Error('A Sage Widget must be initliazed with an "url" attribute')
+} else {
+  const defaultServer = attr.getNamedItem('defaultServer') !== null ? attr.getNamedItem('defaultServer').value : null
+  const defaultQuery = attr.getNamedItem('defaultQuery') !== null ? attr.getNamedItem('defaultQuery').value : null
+  const defaultQName = attr.getNamedItem('defaultQName') !== null ? attr.getNamedItem('defaultQName').value : null
 
-m.mount(root, SageWidget(url, defaultServer, defaultQuery, defaultQName))
+  m.mount(root, SageWidget(url, defaultServer, defaultQuery, defaultQName))
+}

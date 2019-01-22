@@ -50,8 +50,8 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
     isRunning: false,
     isPaused: false,
     graphqlMode: false,
-    graphqlQuery: 'query {\n  name\n}',
-    graphqlContext: '{\n  "@context": {\n    "name": "http://xmlns.com/foaf/0.1/name"\n  }\n}',
+    graphqlQuery: 'query {\n  label\n}',
+    graphqlContext: '{\n  "@context": {\n    "label": "http://www.w3.org/2000/01/rdf-schema#label"\n  }\n}',
     pageNum: 0,
     // execution related variables
     pauseStatus: 'Pause',
@@ -69,13 +69,20 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
   }
   return {
     oncreate: function () {
-      let isShared = false
       // init widget using the server's VoID description
       fetchVoID(url)
         .then(voID => {
           data.datasets = voID.urls
-          data.currentDataset = voID.urls[0].url
           data.queries = voID.queries
+          data.currentDataset = (defaultServer === null) ? voID.urls[0].url : defaultServer
+          if (defaultQuery !== null && defaultQName !== null) {
+            data.currentQueryValue = defaultQuery
+            data.currentQueryName = defaultQName
+            data.sparqlEditor.setValue(defaultQuery)
+          } else {
+            data.currentQueryValue = 'SELECT ?label WHERE {\n  ?s <http://www.w3.org/2000/01/rdf-schema#label> ?label\n}'
+            data.sparqlEditor.setValue(data.currentQueryValue)
+          }
           // then, check if the query was shared
           const url = new URL(document.location.href.replace('#query=', '?query='))
           if (url.searchParams.has('query') && url.searchParams.has('dataset')) {
@@ -96,9 +103,6 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
           return params
         }
       })
-      if (!isShared) {
-        data.sparqlEditor.setValue(defaultQuery)
-      }
       // keep SPARQL query updated in component state
       data.sparqlEditor.on('change', args => {
         data.currentQueryValue = args.getQueryWithValues()
