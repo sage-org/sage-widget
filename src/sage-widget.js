@@ -76,11 +76,26 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
           data.datasets = voID.urls
           data.currentDataset = voID.urls[0].url
           data.queries = voID.queries
+          // then, check if the query was shared
+          const url = new URL(document.location.href.replace('#query=', '?query='))
+          if (url.searchParams.has('query') && url.searchParams.has('dataset')) {
+            // load query & dataset
+            data.currentQueryName = 'SPARQL query shared by link'
+            data.currentQueryValue = url.searchParams.get('query')
+            data.sparqlEditor.setValue(data.currentQueryValue)
+            data.currentDataset = url.searchParams.get('dataset')
+          }
           m.redraw()
         })
         .catch(console.error)
       // build YASQE query widget
-      data.sparqlEditor = YASQE.fromTextArea(document.getElementById('yasqe-editor'))
+      data.sparqlEditor = YASQE.fromTextArea(document.getElementById('yasqe-editor'), {
+        createShareLink: function (editor) {
+          const params = YASQE.createShareLink(editor)
+          params['dataset'] = data.currentDataset
+          return params
+        }
+      })
       if (!isShared) {
         data.sparqlEditor.setValue(defaultQuery)
       }
