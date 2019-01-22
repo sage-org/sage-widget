@@ -25,25 +25,28 @@ SOFTWARE.
 'use strict'
 
 export const FEATURES = {
-  BGP: 'feature_bgp',
   DISTINCT: 'feature_distinct',
   OPTIONAL: 'feature_optional',
   SERVICE: 'feature_service',
-  LIMIT: 'feature_limit'
+  LIMIT: 'feature_limit',
+  FILTER: 'feature_filter'
 }
 
 // extract features from a SPARQL query
 export function extractFeatures (query) {
   const q = query.toLowerCase()
-  const features = [FEATURES.BGP]
+  const features = []
+  if (q.includes('service')) {
+    features.push(FEATURES.SERVICE)
+  }
   if (q.includes('distinct')) {
     features.push(FEATURES.DISTINCT)
   }
   if (q.includes('optional')) {
     features.push(FEATURES.OPTIONAL)
   }
-  if (q.includes('service')) {
-    features.push(FEATURES.SERVICE)
+  if (q.includes('filter')) {
+    features.push(FEATURES.FILTER)
   }
   if (q.includes('limit')) {
     features.push(FEATURES.LIMIT)

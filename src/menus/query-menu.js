@@ -42,13 +42,13 @@ function switchActiveFilter (newActive) {
   $(newActive).addClass('active')
 }
 
-function searchBy (feature) {
-  return function (dataset, q) {
-    return q.features.findIndex(function (x) {
-      return x === feature
-    }) > -1
-  }
-}
+// function searchBy (feature) {
+//   return function (dataset, q) {
+//     return q.features.findIndex(function (x) {
+//       return x === feature
+//     }) > -1
+//   }
+// }
 
 /**
 * Menu used to select a preset SPARQL query, loaded from a server VoID description
@@ -78,8 +78,7 @@ export default function DatasetMenu (state) {
               m('div', {class: 'row'}, [
                 m('div', {class: 'col-md-12'}, [
                   // dataset names
-                  m('h5', [m('i', {class: 'fas fa-search'}), ' Filter by']),
-                  m('h6', [m('i', {class: 'fas fa-database'}), ' RDF Dataset']),
+                  m('h5', [m('i', {class: 'fas fa-search'}), ' Filter by RDF Dataset']),
                   m('ul', {class: 'nav nav-pills'}, [
                     m('li', {class: 'nav-item'}, [
                       m('a', {
@@ -98,24 +97,24 @@ export default function DatasetMenu (state) {
                 ])
               ]),
               // filter by SPARQL feature
-              m('div', {class: 'row'}, [
-                m('div', {class: 'col-md-12'}, [
-                  m('h6', [m('i', {class: 'fas fa-drafting-compass'}), ' SPARQL features']),
-                  m('ul', {class: 'nav nav-pills'}, [
-                    // Optionals
-                    m('li', {class: 'nav-item'}, m('a', {
-                      href: '#',
-                      class: 'nav-queries nav-link',
-                      onclick: filteringFunction(searchBy(FEATURES.SERVICE))}, 'OPTIONAL')),
-                    // Services
-                    m('li', {class: 'nav-item'}, m('a', {
-                      href: '#',
-                      class: 'nav-queries nav-link',
-                      onclick: filteringFunction(searchBy(FEATURES.SERVICE))
-                    }, 'SERVICE'))
-                  ])
-                ])
-              ]),
+              // m('div', {class: 'row'}, [
+              //   m('div', {class: 'col-md-12'}, [
+              //     m('h6', [m('i', {class: 'fas fa-drafting-compass'}), ' SPARQL features']),
+              //     m('ul', {class: 'nav nav-pills'}, [
+              //       // Optionals
+              //       m('li', {class: 'nav-item'}, m('a', {
+              //         href: '#',
+              //         class: 'nav-queries nav-link',
+              //         onclick: filteringFunction(searchBy(FEATURES.SERVICE))}, 'OPTIONAL')),
+              //       // Services
+              //       m('li', {class: 'nav-item'}, m('a', {
+              //         href: '#',
+              //         class: 'nav-queries nav-link',
+              //         onclick: filteringFunction(searchBy(FEATURES.SERVICE))
+              //       }, 'SERVICE'))
+              //     ])
+              //   ])
+              // ]),
               // filtered SPARQL queries
               m('hr'),
               m('div', {class: 'row'}, [
@@ -127,20 +126,40 @@ export default function DatasetMenu (state) {
                         if (!filterQueryPredicate(info.dataset, q)) {
                           return null
                         }
-                        return m('li', {class: 'list-group-item'}, m('a', {
-                          href: '#',
-                          onclick: function (e) {
-                            e.preventDefault()
-                            // set target dataset
-                            state.currentQueryName = q.name
-                            // set query
-                            state.currentDataset = q.url
-                            state.currentQueryValue = q.value
-                            state.sparqlEditor.setValue(q.value)
-                            // close modal
-                            $('#presetQueryMenu').modal('hide')
-                          }
-                        }, q.name))
+                        return m('li', {class: 'list-group-item'}, [
+                          m('a', {
+                            href: '#',
+                            onclick: function (e) {
+                              e.preventDefault()
+                              // set target dataset
+                              state.currentQueryName = q.name
+                              // set query
+                              state.currentDataset = q.url
+                              state.currentQueryValue = q.value
+                              state.sparqlEditor.setValue(q.value)
+                              // close modal
+                              $('#presetQueryMenu').modal('hide')
+                            }
+                          }, q.name),
+                          // display queries features
+                          m('small', q.features.map(f => {
+                            let span = null
+                            switch (f) {
+                              case FEATURES.OPTIONAL:
+                                span = m('span', {class: 'badge badge-warning'}, 'OPTIONAL')
+                                break
+                              case FEATURES.SERVICE:
+                                span = m('span', {class: 'badge badge-info'}, 'SERVICE')
+                                break
+                              case FEATURES.FILTER:
+                                span = m('span', {class: 'badge badge-success'}, 'FILTER')
+                                break
+                              default:
+                                break
+                            }
+                            return [' ', span]
+                          }))
+                        ])
                       })
                     }))
                   ])
