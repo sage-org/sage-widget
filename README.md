@@ -4,6 +4,12 @@
 
 A simple Mithril widget to evaluate SPARQL queries using a Sage server
 
+# Requirements
+
+All following library must be loaded into the DOM beforehand.
+* [Bootstrap v4](https://getbootstrap.com/ and all its dependencies
+* [Font Awesome](https://fontawesome.com/how-to-use/on-the-web/setup/using-package-managers)
+
 # Installation
 
 ```
