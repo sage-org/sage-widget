@@ -37,14 +37,16 @@ function _stubRequestClient (sageClient, spy, state, estimator) {
   const sendRequest = sageClient._graph._httpClient._httpClient.post
   sageClient._graph._httpClient._httpClient.post = (params, cb) => {
     sendRequest(params, function (err, res, body) {
-      const now = Date.now()
-      state.executionTime = (now - state.startTime) / 1000
-      state.httpCalls = spy.nbHTTPCalls
-      state.avgServerTime = spy.avgResponseTime
-      if ('next' in body && body.next !== null) {
-        state.progression = estimator(body.next)
+      if (!err && res.statusCode === 200) {
+        const now = Date.now()
+        state.executionTime = (now - state.startTime) / 1000
+        state.httpCalls = spy.nbHTTPCalls
+        state.avgServerTime = spy.avgResponseTime
+        if ('next' in body && body.next !== null) {
+          state.progression = estimator(body.next)
+        }
+        m.redraw()
       }
-      m.redraw()
       cb(err, res, body)
     })
   }
@@ -77,6 +79,7 @@ export default function ExecutionControls (state) {
     }
     if (state.currentQueryValue !== null) {
       // reset results array & page number
+      state.lastError = null
       state.results = []
       state.pageNum = 0
       state.executionTime = 0
@@ -84,52 +87,68 @@ export default function ExecutionControls (state) {
       // bucket used to buffer results
       state.bucket = []
       state.spy = new sage.Spy()
-      state.currentClient = new sage.SageClient(state.currentDataset, state.spy)
-      _stubRequestClient(state.currentClient, state.spy, state, estimateProgress())
-      state.currentIterator = state.currentClient.execute(state.currentQueryValue)
-      // set starting time
-      state.startTime = Date.now()
-      _subscribe()
+      try {
+        state.currentClient = new sage.SageClient(state.currentDataset, state.spy)
+        _stubRequestClient(state.currentClient, state.spy, state, estimateProgress())
+        state.currentIterator = state.currentClient.execute(state.currentQueryValue)
+        // set starting time
+        state.startTime = Date.now()
+        _subscribe()
+      } catch (e) {
+        state.isRunning = false
+        state.lastError = e.message
+        m.redraw()
+      }
     }
   }
 
   function _subscribe () {
-    // open HTTP client & start query processing
-    state.currentClient._graph.open()
-    state.isRunning = true
-    state.subscription = state.currentIterator.subscribe(function (b) {
-      if (state.isRunning) {
-        if ('toObject' in b) {
-          b = b.toObject()
+    try {
+      // open HTTP client & start query processing
+      state.currentClient._graph.open()
+      state.isRunning = true
+      state.subscription = state.currentIterator.subscribe(function (b) {
+        if (state.isRunning) {
+          if ('toObject' in b) {
+            b = b.toObject()
+          }
+          state.bucket.push(b)
+          if (state.bucket.length >= MAX_BUCKET_SIZE) {
+            state.bucket.forEach(v => {
+              state.results.push(v)
+            })
+            state.bucket = []
+            m.redraw()
+          }
         }
-        state.bucket.push(b)
-        if (state.bucket.length >= MAX_BUCKET_SIZE) {
+      }, function (e) {
+        state.isRunning = false
+        state.lastError = e.message
+        m.redraw()
+      }, function () {
+        // update stats after completion
+        const now = Date.now()
+        state.executionTime = (now - state.startTime) / 1000
+        state.httpCalls = state.spy.nbHTTPCalls
+        state.avgServerTime = state.spy.avgResponseTime
+        // set progression to 100%
+        state.progression = 100
+        // cleanup
+        state.isRunning = false
+        state.subscription = null
+        // push last results
+        if (state.bucket.length > 0) {
           state.bucket.forEach(v => {
             state.results.push(v)
           })
-          state.bucket = []
-          m.redraw()
         }
-      }
-    }, console.error, function () {
-      // update stats after completion
-      const now = Date.now()
-      state.executionTime = (now - state.startTime) / 1000
-      state.httpCalls = state.spy.nbHTTPCalls
-      state.avgServerTime = state.spy.avgResponseTime
-      // set progression to 100%
-      state.progression = 100
-      // cleanup
+        m.redraw()
+      })
+    } catch (e) {
       state.isRunning = false
-      state.subscription = null
-      // push last results
-      if (state.bucket.length > 0) {
-        state.bucket.forEach(v => {
-          state.results.push(v)
-        })
-      }
+      state.lastError = e.message
       m.redraw()
-    })
+    }
   }
 
   function pauseQuery () {
@@ -155,6 +174,22 @@ export default function ExecutionControls (state) {
       return m('div', {class: 'QueryExecutor'}, [
         m('div', {class: 'row'}, [
           m('div', {class: 'col-md-12'}, [
+            (state.lastError !== null) ? m('div', {
+              class: 'alert alert-danger alert-dismissible fade show',
+              role: 'alert'
+            }, [
+              m('p', [
+                m('strong', 'Error!'),
+                ' ',
+                state.lastError
+              ]),
+              m('button', {
+                type: 'button',
+                class: 'close',
+                'data-dismiss': 'alert',
+                'aria-label': 'Close'
+              }, m('span', { 'aria-hidden': true }, m('span', { class: 'fas fa-times' })))
+            ]) : null,
             (state.isRunning || state.pauseStatus === 'Resume') ? m('span', [
               m('button', {
                 class: 'btn btn-warning',

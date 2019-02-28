@@ -59,6 +59,7 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
     currentIterator: null,
     subscription: null,
     spy: null,
+    lastError: null,
     bucket: []
   }
 
