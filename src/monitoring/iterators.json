@@ -1,0 +1,245 @@
+{
+  "nested": {
+    "iterators": {
+      "nested": {
+        "TriplePattern": {
+          "fields": {
+            "subject": {
+              "type": "string",
+              "id": 1
+            },
+            "predicate": {
+              "type": "string",
+              "id": 2
+            },
+            "object": {
+              "type": "string",
+              "id": 3
+            },
+            "graph": {
+              "type": "string",
+              "id": 4
+            }
+          }
+        },
+        "SavedScanIterator": {
+          "fields": {
+            "triple": {
+              "type": "TriplePattern",
+              "id": 1
+            },
+            "lastRead": {
+              "type": "string",
+              "id": 2
+            },
+            "cardinality": {
+              "type": "int64",
+              "id": 3
+            }
+          }
+        },
+        "SavedProjectionIterator": {
+          "oneofs": {
+            "source": {
+              "oneof": [
+                "scanSource",
+                "joinSource",
+                "unionSource",
+                "filterSource"
+              ]
+            }
+          },
+          "fields": {
+            "values": {
+              "rule": "repeated",
+              "type": "string",
+              "id": 1
+            },
+            "scanSource": {
+              "type": "SavedScanIterator",
+              "id": 2
+            },
+            "joinSource": {
+              "type": "SavedIndexJoinIterator",
+              "id": 3
+            },
+            "unionSource": {
+              "type": "SavedBagUnionIterator",
+              "id": 4
+            },
+            "filterSource": {
+              "type": "SavedFilterIterator",
+              "id": 5
+            }
+          }
+        },
+        "SavedIndexJoinIterator": {
+          "oneofs": {
+            "source": {
+              "oneof": [
+                "scanSource",
+                "joinSource",
+                "filterSource"
+              ]
+            }
+          },
+          "fields": {
+            "scanSource": {
+              "type": "SavedScanIterator",
+              "id": 1
+            },
+            "joinSource": {
+              "type": "SavedIndexJoinIterator",
+              "id": 2
+            },
+            "filterSource": {
+              "type": "SavedFilterIterator",
+              "id": 3
+            },
+            "inner": {
+              "type": "TriplePattern",
+              "id": 4
+            },
+            "muc": {
+              "keyType": "string",
+              "type": "string",
+              "id": 5
+            },
+            "lastRead": {
+              "type": "string",
+              "id": 6
+            }
+          }
+        },
+        "SavedBagUnionIterator": {
+          "oneofs": {
+            "left": {
+              "oneof": [
+                "scanLeft",
+                "projLeft",
+                "unionLeft",
+                "joinLeft",
+                "filterLeft"
+              ]
+            },
+            "right": {
+              "oneof": [
+                "scanRight",
+                "projRight",
+                "unionRight",
+                "joinRight",
+                "filterRight"
+              ]
+            }
+          },
+          "fields": {
+            "scanLeft": {
+              "type": "SavedScanIterator",
+              "id": 1
+            },
+            "projLeft": {
+              "type": "SavedProjectionIterator",
+              "id": 2
+            },
+            "unionLeft": {
+              "type": "SavedBagUnionIterator",
+              "id": 3
+            },
+            "joinLeft": {
+              "type": "SavedIndexJoinIterator",
+              "id": 4
+            },
+            "filterLeft": {
+              "type": "SavedFilterIterator",
+              "id": 5
+            },
+            "scanRight": {
+              "type": "SavedScanIterator",
+              "id": 6
+            },
+            "projRight": {
+              "type": "SavedProjectionIterator",
+              "id": 7
+            },
+            "unionRight": {
+              "type": "SavedBagUnionIterator",
+              "id": 8
+            },
+            "joinRight": {
+              "type": "SavedIndexJoinIterator",
+              "id": 9
+            },
+            "filterRight": {
+              "type": "SavedFilterIterator",
+              "id": 10
+            }
+          }
+        },
+        "SavedFilterIterator": {
+          "oneofs": {
+            "source": {
+              "oneof": [
+                "scanSource",
+                "projSource",
+                "filterSource",
+                "joinSource"
+              ]
+            }
+          },
+          "fields": {
+            "scanSource": {
+              "type": "SavedScanIterator",
+              "id": 1
+            },
+            "projSource": {
+              "type": "SavedProjectionIterator",
+              "id": 2
+            },
+            "filterSource": {
+              "type": "SavedFilterIterator",
+              "id": 3
+            },
+            "joinSource": {
+              "type": "SavedIndexJoinIterator",
+              "id": 4
+            },
+            "expression": {
+              "type": "string",
+              "id": 5
+            },
+            "mu": {
+              "keyType": "string",
+              "type": "string",
+              "id": 6
+            }
+          }
+        },
+        "RootTree": {
+          "oneofs": {
+            "source": {
+              "oneof": [
+                "projSource",
+                "unionSource",
+                "filterSource"
+              ]
+            }
+          },
+          "fields": {
+            "projSource": {
+              "type": "SavedProjectionIterator",
+              "id": 1
+            },
+            "unionSource": {
+              "type": "SavedBagUnionIterator",
+              "id": 2
+            },
+            "filterSource": {
+              "type": "SavedFilterIterator",
+              "id": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

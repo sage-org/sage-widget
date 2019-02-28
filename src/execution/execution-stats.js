@@ -43,7 +43,8 @@ export default function ExecutionStats (state) {
             m('table', {class: 'table'}, [
               m('thead', [
                 m('tr', [
-                  m('th', [ m('i', {class: 'fas fa-stopwatch'}), ' Execution time' ]),
+                  m('th', [ m('i', {class: 'far fa-clock'}), ' Execution time' ]),
+                  m('th', [ m('i', {class: 'fas fa-sync fa-spin'}), ' Progression' ]),
                   m('th', [ m('i', {class: 'fas fa-download'}), ' HTTP requests' ]),
                   m('th', [ m('i', {class: 'fas fa-list-ol'}), ' Number of results' ]),
                   m('th', [ m('i', {class: 'fas fa-chart-line'}), ' Avg. HTTP response time' ])
@@ -52,6 +53,7 @@ export default function ExecutionStats (state) {
               m('tbody', [
                 m('tr', [
                   m('td', state.executionTime + ' s'),
+                  m('td', state.progression + ' %'),
                   m('td', state.httpCalls + ' requests'),
                   m('td', state.results.length + ' solution mappings'),
                   m('td', Math.floor(state.avgServerTime) + ' ms')

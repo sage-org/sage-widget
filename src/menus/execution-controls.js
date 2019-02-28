@@ -26,13 +26,14 @@ SOFTWARE.
 
 import m from 'mithril'
 import GraphqlCompiler from '../graphql/compiler'
+import { estimateProgress } from '../monitoring/monitoring'
 
 const MAX_BUCKET_SIZE = 10
 
 /**
- * Stub the HTTP client to measure HTTP requests
+ * Stub the HTTP client to measure HTTP requests and estimate query progression
  */
-function _stubRequestClient (sageClient, spy, state) {
+function _stubRequestClient (sageClient, spy, state, estimator) {
   const sendRequest = sageClient._graph._httpClient._httpClient.post
   sageClient._graph._httpClient._httpClient.post = (params, cb) => {
     sendRequest(params, function (err, res, body) {
@@ -40,6 +41,10 @@ function _stubRequestClient (sageClient, spy, state) {
       state.executionTime = (now - state.startTime) / 1000
       state.httpCalls = spy.nbHTTPCalls
       state.avgServerTime = spy.avgResponseTime
+      if ('next' in body && body.next !== null) {
+        state.progression = estimator(body.next)
+      }
+      m.redraw()
       cb(err, res, body)
     })
   }
@@ -75,11 +80,12 @@ export default function ExecutionControls (state) {
       state.results = []
       state.pageNum = 0
       state.executionTime = 0
+      state.progression = 0
       // bucket used to buffer results
       state.bucket = []
       state.spy = new sage.Spy()
       state.currentClient = new sage.SageClient(state.currentDataset, state.spy)
-      _stubRequestClient(state.currentClient, state.spy, state)
+      _stubRequestClient(state.currentClient, state.spy, state, estimateProgress())
       state.currentIterator = state.currentClient.execute(state.currentQueryValue)
       // set starting time
       state.startTime = Date.now()
@@ -111,6 +117,8 @@ export default function ExecutionControls (state) {
       state.executionTime = (now - state.startTime) / 1000
       state.httpCalls = state.spy.nbHTTPCalls
       state.avgServerTime = state.spy.avgResponseTime
+      // set progression to 100%
+      state.progression = 100
       // cleanup
       state.isRunning = false
       state.subscription = null
