@@ -44,7 +44,7 @@ export default function ExecutionStats (state) {
               m('thead', [
                 m('tr', [
                   m('th', [ m('i', {class: 'far fa-clock'}), ' Execution time' ]),
-                  m('th', [ m('i', {class: 'fas fa-sync fa-spin'}), ' Progression' ]),
+                  m('th', [ m('i', {class: 'fas fa-sync'}), ' Progression' ]),
                   m('th', [ m('i', {class: 'fas fa-download'}), ' HTTP requests' ]),
                   m('th', [ m('i', {class: 'fas fa-list-ol'}), ' Number of results' ]),
                   m('th', [ m('i', {class: 'fas fa-chart-line'}), ' Avg. HTTP response time' ])

@@ -1,6 +1,6 @@
 {
   "name": "sage-widget",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A simple widget to evaluate SPARQL queries using a Sage server",
   "main": "src/App.js",
   "scripts": {
