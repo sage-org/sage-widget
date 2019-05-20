@@ -1,6 +1,6 @@
 {
   "name": "sage-widget",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "A simple widget to evaluate SPARQL queries using a Sage server",
   "main": "src/App.js",
   "scripts": {
@@ -32,7 +32,7 @@
     "graphql-to-sparql": "^1.4.1",
     "mithril": "^1.1.6",
     "protobufjs": "^6.8.8",
-    "sage-client": "^1.3.0",
+    "sage-client": "^1.3.1",
     "yasgui-yasqe": "^2.11.22"
   },
   "devDependencies": {
