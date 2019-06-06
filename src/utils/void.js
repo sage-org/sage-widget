@@ -40,18 +40,20 @@ export function fetchVoID (url) {
     headers: {
       'Accept': 'application/json'
     }
-  })
-    .then(body => {
-      const m = new Map()
-      body.forEach(entity => {
-        m.set(entity['@id'], entity)
-      })
-      return formatVoID(url, m)
+  }).then(body => {
+    const m = new Map()
+    body.forEach(entity => {
+      m.set(entity['@id'], entity)
     })
+    return m
+  })
 }
 
 // format a VoID description to the format used by the SaGe widget
-function formatVoID (url, descriptor) {
+export function formatVoID (url, descriptor) {
+  if (url.endsWith('/')) {
+    url = url.substring(0, url.length - 1)
+  }
   const root = descriptor.get(url)
   const graphCollec = root[SD('availableGraphs')][0]
   // get all graphs provided by the Sage endpoint

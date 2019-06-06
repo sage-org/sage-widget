@@ -39,7 +39,7 @@ if (attr.getNamedItem('url') === null) {
   const defaultQName = attr.getNamedItem('defaultQName') !== null ? attr.getNamedItem('defaultQName').value : null
 
   fetchVoID(url)
-    .then(voidContent => {
-      m.mount(root, SageWidget(url, voidContent, defaultServer, defaultQuery, defaultQName))
+    .then(voIDContent => {
+      m.mount(root, SageWidget(url, voIDContent, defaultServer, defaultQuery, defaultQName))
     })
 }
