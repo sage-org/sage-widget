@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 'use strict'
+import m from 'mithril'
 import { extractFeatures } from './features.js'
 import { DCTERMS, HYDRA, SAGE, SD, RDF, RDFS } from './rdf.js'
 import { groupBy, map, sortBy } from 'lodash'
@@ -32,13 +33,14 @@ export function fetchVoID (url) {
   if (url.endsWith('/')) {
     url = url.substring(0, url.length - 1)
   }
-  const headers = new Headers()
-  headers.append('Accept', 'application/json')
-  const request = new Request(`${url}/void`, {
-    headers
+  return m.request(`${url}/void`, {
+    method: 'GET',
+    json: true,
+    responseType: 'json',
+    headers: {
+      'Accept': 'application/json'
+    }
   })
-  return fetch(request)
-    .then(res => res.json())
     .then(body => {
       const m = new Map()
       body.forEach(entity => {

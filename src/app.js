@@ -25,17 +25,21 @@ SOFTWARE.
 'use strict'
 import m from 'mithril'
 import SageWidget from './sage-widget.js'
+import { fetchVoID } from './utils/void.js'
 import './app.css'
 
 const root = document.getElementById('sage-widget')
 const attr = root.attributes
 const url = attr.getNamedItem('url').value
 if (attr.getNamedItem('url') === null) {
-  throw new Error('A Sage Widget must be initliazed with an "url" attribute')
+  throw new Error('A Sage Widget must be initiliazed with an "url" attribute')
 } else {
   const defaultServer = attr.getNamedItem('defaultServer') !== null ? attr.getNamedItem('defaultServer').value : null
   const defaultQuery = attr.getNamedItem('defaultQuery') !== null ? attr.getNamedItem('defaultQuery').value : null
   const defaultQName = attr.getNamedItem('defaultQName') !== null ? attr.getNamedItem('defaultQName').value : null
 
-  m.mount(root, SageWidget(url, defaultServer, defaultQuery, defaultQName))
+  fetchVoID(url)
+    .then(voidContent => {
+      m.mount(root, SageWidget(url, voidContent, defaultServer, defaultQuery, defaultQName))
+    })
 }

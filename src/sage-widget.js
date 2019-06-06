@@ -31,7 +31,6 @@ import ExecutionControls from './menus/execution-controls'
 import GraphQLBoard from './menus/graphql-board'
 import ExecutionStats from './execution/execution-stats.js'
 import ResultsTable from './execution/results-table.js'
-import { fetchVoID } from './utils/void.js'
 import YASQE from 'yasgui-yasqe'
 import 'yasgui-yasqe/dist/yasqe.min.css'
 
@@ -39,7 +38,7 @@ import 'yasgui-yasqe/dist/yasqe.min.css'
 * A SPARQL/GraphQL widget for querying SaGe servers
 * @author Thomas Minier
 */
-export default function SageWidget (url, defaultServer, defaultQuery, defaultQName) {
+export default function SageWidget (url, voidContent, defaultServer, defaultQuery, defaultQName) {
   const data = {
     datasets: [],
     currentDataset: defaultServer,
@@ -69,33 +68,19 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
     }
   }
   return {
-    oncreate: function () {
+    oninit: function () {
       // init widget using the server's VoID description
-      fetchVoID(url)
-        .then(voID => {
-          data.datasets = voID.urls
-          data.queries = voID.queries
-          data.currentDataset = (defaultServer === null) ? voID.urls[0].url : defaultServer
-          if (defaultQuery !== null && defaultQName !== null) {
-            data.currentQueryValue = defaultQuery
-            data.currentQueryName = defaultQName
-            data.sparqlEditor.setValue(defaultQuery)
-          } else {
-            data.currentQueryValue = 'SELECT ?label WHERE {\n  ?s <http://www.w3.org/2000/01/rdf-schema#label> ?label\n}'
-            data.sparqlEditor.setValue(data.currentQueryValue)
-          }
-          // then, check if the query was shared
-          const url = new URL(document.location.href.replace('#query=', '?query='))
-          if (url.searchParams.has('query') && url.searchParams.has('dataset')) {
-            // load query & dataset
-            data.currentQueryName = 'SPARQL query shared by link'
-            data.currentQueryValue = url.searchParams.get('query')
-            data.sparqlEditor.setValue(data.currentQueryValue)
-            data.currentDataset = url.searchParams.get('dataset')
-          }
-          m.redraw()
-        })
-        .catch(console.error)
+      data.datasets = voidContent.urls
+      data.queries = voidContent.queries
+      data.currentDataset = (defaultServer === null) ? voidContent.urls[0].url : defaultServer
+      if (defaultQuery !== null && defaultQName !== null) {
+        data.currentQueryValue = defaultQuery
+        data.currentQueryName = defaultQName
+      } else {
+        data.currentQueryValue = 'SELECT ?label WHERE {\n  ?s <http://www.w3.org/2000/01/rdf-schema#label> ?label\n}'
+      }
+    },
+    oncreate: function () {
       // build YASQE query widget
       data.sparqlEditor = YASQE.fromTextArea(document.getElementById('yasqe-editor'), {
         createShareLink: function (editor) {
@@ -112,6 +97,17 @@ export default function SageWidget (url, defaultServer, defaultQuery, defaultQNa
       $('#sparqlTab').on('shown.bs.tab', function () {
         data.sparqlEditor.setValue(data.currentQueryValue)
       })
+      // then, check if the query was shared
+      const url = new URL(document.location.href.replace('#query=', '?query='))
+      if (url.searchParams.has('query') && url.searchParams.has('dataset')) {
+        // load query & dataset
+        data.currentQueryName = 'SPARQL query shared by link'
+        data.currentQueryValue = url.searchParams.get('query')
+        data.sparqlEditor.setValue(data.currentQueryValue)
+        data.currentDataset = url.searchParams.get('dataset')
+      }
+      // set default query
+      data.sparqlEditor.setValue(data.currentQueryValue)
     },
     view: function () {
       return [
