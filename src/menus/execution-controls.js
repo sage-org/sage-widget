@@ -192,7 +192,7 @@ export default function ExecutionControls (state) {
             ]) : null,
             (state.isRunning || state.pauseStatus === 'Resume') ? m('span', [
               m('button', {
-                class: 'btn btn-warning',
+                class: 'btn btn-outline-warning',
                 onclick: pauseQuery
               }, (state.pauseStatus === 'Pause') ? [
                 m('i', {class: 'fas fa-stop'}),
@@ -203,7 +203,7 @@ export default function ExecutionControls (state) {
               ]),
               ' ',
               m('button', {
-                class: 'btn btn-danger',
+                class: 'btn btn-outline-danger',
                 onclick: stopQuery
               }, [
                 m('i', {class: 'fas fa-times-circle'}),
@@ -211,7 +211,7 @@ export default function ExecutionControls (state) {
               ])
             ]) : m('span', [
               m('button', {
-                class: 'btn btn-success',
+                class: 'btn btn-outline-success',
                 onclick: executeQuery
               }, [
                 m('i', {class: 'fas fa-play'}),
@@ -219,7 +219,7 @@ export default function ExecutionControls (state) {
               ]),
               ' ',
               (state.graphqlMode) ? m('button', {
-                class: 'btn btn-primary',
+                class: 'btn btn-outline-primary',
                 onclick: compileShow
               }, [
                 m('i', {class: 'fas fa-cogs'}),

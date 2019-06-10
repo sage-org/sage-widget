@@ -33,19 +33,19 @@ import m from 'mithril'
 export default function DatasetMenu (state) {
   return m('div', {class: 'form-group'}, [
     m('label', {for: 'serverInput'}, [
-      m('strong', 'Select a RDF dataset:')
+      m('strong', 'Select a RDF Graph:')
     ]),
     m('div', {class: 'input-group'}, [
       m('div', {class: 'input-group-prepend'}, [
         m('div', {class: 'dropdown'}, [
           m('button', {
             id: 'dropdownMenuButton',
-            class: 'btn btn-outline-secondary dropdown-toggle',
+            class: 'btn btn-outline-primary dropdown-toggle',
             type: 'button',
             'data-toggle': 'dropdown',
             'aria-haspopup': 'true',
             'aria-expanded': 'false'
-          }, 'Available datasets'),
+          }, 'Available Graphs'),
           m('div', {
             class: 'dropdown-menu scrollable-menu',
             'aria-labelledby': 'dropdownMenuButton'

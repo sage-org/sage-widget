@@ -52,26 +52,28 @@ export default function ResultsTable (state) {
             m('i', {class: 'fas fa-list-ul'}),
             ' Query results'
           ]),
-          // Table
-          m('table', {class: 'table table-striped'}, [
-            // headers
-            m('thead', [
-              m('tr', map(state.results[0], function (value, key) {
-                return m('th', key)
+          m('div', { class: 'table-responsive' }, [
+            // Table
+            m('table', {class: 'table table-striped'}, [
+              // headers
+              m('thead', [
+                m('tr', map(state.results[0], function (value, key) {
+                  return m('th', key)
+                }))
+              ]),
+              // Rows
+              m('tbody', state.results.slice(state.pageNum * PAGE_SIZE, state.pageNum * PAGE_SIZE + PAGE_SIZE).map(v => {
+                return m('tr', map(v, function (value) {
+                  // renders URIs as links
+                  if (value.startsWith('http')) {
+                    return m('td', [
+                      m('a', {href: value, target: '_blank'}, `<${value}>`)
+                    ])
+                  }
+                  return m('td', value)
+                }))
               }))
-            ]),
-            // Rows
-            m('tbody', state.results.slice(state.pageNum * PAGE_SIZE, state.pageNum * PAGE_SIZE + PAGE_SIZE).map(v => {
-              return m('tr', map(v, function (value) {
-                // renders URIs as links
-                if (value.startsWith('http')) {
-                  return m('td', [
-                    m('a', {href: value, target: '_blank'}, `<${value}>`)
-                  ])
-                }
-                return m('td', value)
-              }))
-            }))
+            ])
           ])
         ]) : null,
         // Navigation buttons

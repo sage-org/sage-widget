@@ -42,14 +42,6 @@ function switchActiveFilter (newActive) {
   $(newActive).addClass('active')
 }
 
-// function searchBy (feature) {
-//   return function (dataset, q) {
-//     return q.features.findIndex(function (x) {
-//       return x === feature
-//     }) > -1
-//   }
-// }
-
 /**
 * Menu used to select a preset SPARQL query, loaded from a server VoID description
 * @author Thomas Minier
@@ -67,16 +59,13 @@ export default function DatasetMenu (state) {
     }, [
       m('div', {class: 'modal-dialog', role: 'document'}, [
         m('div', {class: 'modal-content'}, [
-          // header
-          m('div', {class: 'modal-header'}, [
-            m('button', {class: 'close', 'data-dismiss': 'modal', 'aria-label': 'close'}, m('i', {class: 'fas fa-times fa-xs'}))
-          ]),
           // body
           m('div', {class: 'modal-body'}, [
             m('div', {class: 'container'}, [
               // filter by dataset name
               m('div', {class: 'row'}, [
                 m('div', {class: 'col-md-12'}, [
+                  m('button', {class: 'close', 'data-dismiss': 'modal', 'aria-label': 'close'}, m('i', {class: 'fas fa-times fa-xs'})),
                   // dataset names
                   m('h5', [m('i', {class: 'fas fa-search'}), ' Filter by RDF Dataset']),
                   m('ul', {class: 'nav nav-pills'}, [
@@ -96,25 +85,6 @@ export default function DatasetMenu (state) {
                   ])
                 ])
               ]),
-              // filter by SPARQL feature
-              // m('div', {class: 'row'}, [
-              //   m('div', {class: 'col-md-12'}, [
-              //     m('h6', [m('i', {class: 'fas fa-drafting-compass'}), ' SPARQL features']),
-              //     m('ul', {class: 'nav nav-pills'}, [
-              //       // Optionals
-              //       m('li', {class: 'nav-item'}, m('a', {
-              //         href: '#',
-              //         class: 'nav-queries nav-link',
-              //         onclick: filteringFunction(searchBy(FEATURES.SERVICE))}, 'OPTIONAL')),
-              //       // Services
-              //       m('li', {class: 'nav-item'}, m('a', {
-              //         href: '#',
-              //         class: 'nav-queries nav-link',
-              //         onclick: filteringFunction(searchBy(FEATURES.SERVICE))
-              //       }, 'SERVICE'))
-              //     ])
-              //   ])
-              // ]),
               // filtered SPARQL queries
               m('hr'),
               m('div', {class: 'row'}, [
@@ -173,19 +143,19 @@ export default function DatasetMenu (state) {
     // display query selection button + selected query
     m('div', {class: 'form-group'}, [
       m('label', {for: 'serverInput'}, [
-        m('strong', 'Select a preset query')
+        m('strong', 'Select an example SPARQL query')
       ]),
       m('div', {class: 'input-group'}, [
         m('div', {class: 'input-group-prepend'}, [
           // button to show modal
           m('button', {
             type: 'button',
-            class: 'btn btn-primary',
+            class: 'btn btn-outline-primary',
             'data-toggle': 'modal',
             'data-target': '#presetQueryMenu'
           }, [
-            m('i', {class: 'fas fa-eye'}),
-            ' Show preset queries'
+            m('i', {class: 'far fa-folder-open'}),
+            ' Show examples'
           ])
         ]),
         m('input', {

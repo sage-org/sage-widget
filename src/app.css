@@ -4,6 +4,14 @@ body {
   font-family: sans-serif;
 }
 
+.yasqe {
+  margin-bottom: 10px;
+}
+
+.QueryExecutor {
+  margin-bottom: 10px;
+}
+
 .SparqlEditor {
   text-align: left;
 }
