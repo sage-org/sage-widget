@@ -49,13 +49,21 @@ export default function DatasetMenu (state) {
           m('div', {
             class: 'dropdown-menu scrollable-menu',
             'aria-labelledby': 'dropdownMenuButton'
-          }, state.datasets.map(s => m('button', {
-            class: 'dropdown-item',
-            onclick: e => {
-              e.preventDefault()
-              state.currentDataset = s.url
-            }
-          }, s.name)))
+          }, state.datasets.map((d, index) => {
+            return [
+              (index > 0) ? m('div', { class: 'dropdown-divider' }) : null,
+              m('h5', { class: 'dropdown-header text-primary' }, [
+                m('strong', { class: 'fas fa-at' }),
+                ' ' + d.url
+              ])
+            ].concat(d.datasets.map(s => m('button', {
+              class: 'dropdown-item',
+              onclick: e => {
+                e.preventDefault()
+                state.currentDataset = s.url
+              }
+            }, s.name)))
+          }))
         ])
       ]),
       m('input', {

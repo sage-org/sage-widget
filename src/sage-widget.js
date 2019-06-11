@@ -39,7 +39,7 @@ import 'yasgui-yasqe/dist/yasqe.min.css'
 * A SPARQL/GraphQL widget for querying SaGe servers
 * @author Thomas Minier
 */
-export default function SageWidget (url, voIDContent, defaultServer, defaultQuery, defaultQName) {
+export default function SageWidget (voIDContents, defaultServer, defaultQuery, defaultQName) {
   const data = {
     datasets: [],
     currentDataset: defaultServer,
@@ -70,11 +70,17 @@ export default function SageWidget (url, voIDContent, defaultServer, defaultQuer
   }
   return {
     oninit: function () {
-      const voID = formatVoID(url, voIDContent)
+      const voIDs = voIDContents.map(d => {
+        return {url: d.url, content: formatVoID(d.url, d.content)}
+      })
+      data.datasets = voIDs.map(v => {
+        return {url: v.url, datasets: v.content.urls}
+      })
+      data.queries = voIDs.map(v => {
+        return v.content.queries
+      }).flat()
       // init widget using the server's VoID description
-      data.datasets = voID.urls
-      data.queries = voID.queries
-      data.currentDataset = (defaultServer === null) ? voID.urls[0].url : defaultServer
+      data.currentDataset = (defaultServer === null) ? data.datasets[0].urls[0].url : defaultServer
       if (defaultQuery !== null && defaultQName !== null) {
         data.currentQueryValue = defaultQuery
         data.currentQueryName = defaultQName

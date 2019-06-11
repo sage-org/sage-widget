@@ -30,16 +30,21 @@ import './app.css'
 
 const root = document.getElementById('sage-widget')
 const attr = root.attributes
-const url = attr.getNamedItem('url').value
-if (attr.getNamedItem('url') === null) {
-  throw new Error('A Sage Widget must be initiliazed with an "url" attribute')
+
+if (attr.getNamedItem('urls') === null) {
+  throw new Error('A Sage Widget must be initiliazed with an "urls" attribute')
 } else {
+  const urls = attr.getNamedItem('urls').value.split(',')
   const defaultServer = attr.getNamedItem('defaultServer') !== null ? attr.getNamedItem('defaultServer').value : null
   const defaultQuery = attr.getNamedItem('defaultQuery') !== null ? attr.getNamedItem('defaultQuery').value : null
   const defaultQName = attr.getNamedItem('defaultQName') !== null ? attr.getNamedItem('defaultQName').value : null
 
-  fetchVoID(url)
-    .then(voIDContent => {
-      m.mount(root, SageWidget(url, voIDContent, defaultServer, defaultQuery, defaultQName))
+  Promise.all(urls.map(url => {
+    return fetchVoID(url).then(content => {
+      return {url, content}
+    })
+  }))
+    .then(voIDContents => {
+      m.mount(root, SageWidget(voIDContents, defaultServer, defaultQuery, defaultQName))
     })
 }

@@ -67,7 +67,7 @@ export default function DatasetMenu (state) {
                 m('div', {class: 'col-md-12'}, [
                   m('button', {class: 'close', 'data-dismiss': 'modal', 'aria-label': 'close'}, m('i', {class: 'fas fa-times fa-xs'})),
                   // dataset names
-                  m('h5', [m('i', {class: 'fas fa-search'}), ' Filter by RDF Dataset']),
+                  m('h5', [m('i', {class: 'fas fa-search'}), ' Filter by RDF Graph']),
                   m('ul', {class: 'nav nav-pills'}, [
                     m('li', {class: 'nav-item'}, [
                       m('a', {
