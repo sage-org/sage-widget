@@ -88,7 +88,9 @@ export default function ExecutionControls (state) {
       state.bucket = []
       state.spy = new sage.Spy()
       try {
-        state.currentClient = new sage.SageClient(state.currentDataset, state.spy)
+        const i = state.currentDataset.indexOf('/sparql')
+        const serverURL = state.currentDataset.slice(0, i + 7)
+        state.currentClient = new sage.SageClient(serverURL, state.currentDataset, state.spy)
         _stubRequestClient(state.currentClient, state.spy, state, estimateProgress())
         state.currentIterator = state.currentClient.execute(state.currentQueryValue)
         // set starting time
