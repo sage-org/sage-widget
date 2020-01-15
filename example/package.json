@@ -1,0 +1,24 @@
+{
+  "name": "sage-wdiget-example",
+  "version": "1.0.0",
+  "description": "An example website built using the SaGe widget",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "example",
+    "website",
+    "widget"
+  ],
+  "author": "Thomas Minier <thomas.minier@univ-nantes.fr>",
+  "license": "MIT",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.12.0",
+    "bootstrap": "^4.4.1",
+    "jquery": "^3.4.1",
+    "popper.js": "^1.16.0",
+    "sage-client": "^2.0.1",
+    "sage-widget": "^3.0.0"
+  }
+}
