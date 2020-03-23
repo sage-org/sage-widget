@@ -1,61 +1,39 @@
 {
-  "name": "sage-widget",
-  "version": "3.1.1",
-  "description": "A simple widget to evaluate SPARQL queries using a Sage server",
-  "main": "src/App.js",
-  "scripts": {
-    "lint": "standard src/*.js --fix",
-    "build": "webpack",
-    "test": "echo 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sage-org/sage-widget.git"
-  },
-  "keywords": [
-    "sage client",
-    "sparql query",
-    "widget",
-    "react"
-  ],
-  "author": "Corentin Marionneau <corentin.marionneau@gmail.com> (https://github.com/Slaanaroth)",
-  "contributors": [
-    "Thomas Minier <thomas.minier@univ-nantes.fr> (https://callidon.github.io/)"
-  ],
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/sage-org/sage-widget/issues"
-  },
-  "homepage": "https://github.com/sage-org/sage-client#readme",
+  "name": "my-app",
+  "version": "0.1.0",
+  "private": true,
   "dependencies": {
-    "codeflask": "^1.4.0",
-    "graphql-to-sparql": "^1.4.1",
-    "mithril": "^1.1.6",
-    "protobufjs": "^6.8.8",
-    "sage-client": "^2.1.1",
-    "yasgui-yasqe": "^2.11.22"
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "@types/jest": "^24.0.0",
+    "@types/node": "^12.0.0",
+    "@types/react": "^16.9.0",
+    "@types/react-dom": "^16.9.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "3.4.1",
+    "typescript": "~3.7.2"
   },
-  "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-loader": "^7.1.5",
-    "babel-preset-env": "^1.7.0",
-    "css-loader": "^1.0.1",
-    "mini-css-extract-plugin": "^0.4.4",
-    "standard": "^11.0.1",
-    "uglifyjs-webpack-plugin": "^1.3.0",
-    "webpack": "^4.25.1",
-    "webpack-cli": "^3.1.2"
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
-  "standard": {
-    "env": [
-      "browser",
-      "react",
-      "mocha",
-      "chai"
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
     ],
-    "globals": [
-      "sage",
-      "$"
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
     ]
   }
 }
