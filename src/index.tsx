@@ -8,7 +8,7 @@ const root = document.getElementById('sage-widget')
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <App url='http://soyez-sage.univ-nantes.fr/void/'/>
   </React.StrictMode>,
   root
 );

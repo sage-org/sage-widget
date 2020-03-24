@@ -1,32 +1,36 @@
 import React from 'react'
-import VoIDService from './void/void-service'
-import logo from './logo.svg'
+import Dataset from './void/dataset'
+import DatasetFactory from './void/dataset-factory'
 import './App.css'
 
-export default class App extends React.Component {
-  constructor (props: any) {
+interface AppProps {
+  url: string
+}
+
+interface AppState {
+  dataset: Dataset | null
+}
+
+export default class App extends React.Component<AppProps, AppState> {
+  constructor (props: AppProps) {
     super(props)
-    VoIDService.queryVoID('http://soyez-sage.univ-nantes.fr/void/')
-    .then(console.log)
+    this.state = {
+      dataset: null
+    }
+  }
+
+  componentDidMount () {
+    const factory = new DatasetFactory()
+    factory.fromURI(this.props.url)
+      .then(dataset => this.setState({ dataset }))
   }
 
   render () {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.tsx</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
+      <div>
+        <p>
+          {this.state.dataset?.name}
+        </p>
       </div>
     );
   }
