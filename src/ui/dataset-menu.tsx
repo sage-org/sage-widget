@@ -1,4 +1,4 @@
-/* file: dataset.ts
+/* file: dataset-menu.tsx
 MIT License
 
 Copyright (c) 2019-2020 Thomas Minier
@@ -22,34 +22,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import Graph from './graph'
+import React from 'react'
+import Dataset from '../void/dataset'
 
-export default class Dataset {
-  private _name: string
-  private _graphs: Graph[]
+import FormControl from 'react-bootstrap/FormControl'
+import InputGroup from 'react-bootstrap/InputGroup'
 
-  constructor (name: string) {
-    this._name = name
-    this._graphs = []
-  }
-
-  get name (): string {
-    return this._name
-  }
-
-  get length (): number {
-    return this._graphs.length
-  }
-
-  get graphs (): Graph[] {
-    return this._graphs
-  }
-
-  addGraph (graph: Graph): void {
-    this._graphs.push(graph)
-  }
-
-  getGraph (index: number): Graph | undefined {
-    return this._graphs[index]
-  }
+interface DatasetMenuProps {
+  dataset: Dataset | null
 }
+
+/**
+* The menu used to select a RDF Graph in the dataset
+* @author Thomas Minier
+*/
+export default class DatasetMenu extends React.Component<DatasetMenuProps, {}> {
+  render () {
+    return (
+      <InputGroup className="mb-3">
+        <InputGroup.Prepend>
+          <InputGroup.Text><strong>Select a RDF Graph:</strong></InputGroup.Text>
+        </InputGroup.Prepend>
+        <FormControl as="select">
+          {this.props.dataset?.graphs.map(graph => {
+            return (<option value={graph.url} key={graph.url}>{graph.name}</option>)
+          })}
+        </FormControl>
+      </InputGroup>
+    )
+  }
+} 
