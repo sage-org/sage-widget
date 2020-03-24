@@ -1,4 +1,4 @@
-/* file: void-service.ts
+/* file: dataset-factory.ts
 MIT License
 
 Copyright (c) 2019-2020 Thomas Minier
@@ -24,7 +24,8 @@ SOFTWARE.
 
 import Dataset from './dataset'
 import Graph from './graph'
-import axios from 'axios'
+import { VoIDEntity, VoIDDataset, VoIDGraph, VoIDGraphList } from './void-entities'
+import HTTPClient from '../http/http-client'
 
 const DC_TITLE = 'http://purl.org/dc/terms/title'
 const SS_AVAILABLE_GRAPHS = 'http://www.w3.org/ns/sparql-service-description#availableGraphs'
@@ -32,43 +33,21 @@ const SS_NAMED_GRAPHS = 'http://www.w3.org/ns/sparql-service-description#namedGr
 const SS_NAME = 'http://www.w3.org/ns/sparql-service-description#name'
 const SS_GRAPH = 'http://www.w3.org/ns/sparql-service-description#graph'
 
-interface URI {
-  "@id": string
-}
-
-interface Literal {
-  "@value": string
-}
-
-interface VoIDEntity extends URI {
-  "@type": string[],
-}
-
-interface VoIDDataset extends VoIDEntity {
-  "http://purl.org/dc/terms/maintainer": Literal[],
-  "http://purl.org/dc/terms/title": Literal[],
-  "http://www.w3.org/ns/sparql-service-description#availableGraphs": URI[],
-  "http://xmlns.com/foaf/0.1/homepage":  URI[]
-}
-
-interface VoIDGraphList extends VoIDEntity {
-  "http://www.w3.org/ns/sparql-service-description#namedGraph": URI[]
-}
-
-interface VoIDGraph extends VoIDEntity {
-  "http://www.w3.org/ns/sparql-service-description#name": URI[],
-  "http://www.w3.org/ns/sparql-service-description#graph": URI[]
-}
-
+/**
+ * A Factory used to build Dataset from VoID files
+ * @author Thomas Minier
+ */
 export default class DatasetFactory {
+  /**
+   * Build a RDF Dataset by dereferencing a VoID file
+   * @param url - URL of the VoID file
+   * @return A RDF Dataset built from the input VoID file
+   */
   async fromURI (url: string): Promise<Dataset> {
-    const response = await axios.get(url, {
-      headers: {
-        'Accept': 'application/json'
-      }
-    })
+    const response = await HTTPClient.fetchJSON<VoIDEntity[]>(url)
+
     const entities = new Map<string, any>()
-    response.data.forEach((entity: any) => {
+    response.forEach((entity: any) => {
       entities.set(entity['@id'], entity)
     })
 
