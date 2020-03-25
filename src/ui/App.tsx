@@ -30,9 +30,9 @@ import BindingsRepository from '../sparql/bindings-repo'
 import Form from 'react-bootstrap/Form'
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'
-import Table from 'react-bootstrap/Table'
 
 import DatasetMenu from './dataset-menu'
+import ResultsTable from './results-table'
 
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -46,6 +46,8 @@ interface AppState {
   repository: BindingsRepository
 }
 
+const UPDATE_THRESHOLD = 15
+
 export default class App extends React.Component<AppProps, AppState> {
   constructor (props: AppProps) {
     super(props)
@@ -56,17 +58,6 @@ export default class App extends React.Component<AppProps, AppState> {
   }
 
   componentDidMount () {
-    let counter = 0
-    const THRESHOLD = 5
-    // listen for repo. update, and redraw every THRESHOLD insertions
-    this.state.repository.onAdd(() => {
-      counter++
-      if (counter > THRESHOLD) {
-        this.forceUpdate()
-        counter = 0
-      }
-    })
-
     // initialize the RDF dataset form the VoID URL
     const factory = new DatasetFactory()
     factory.fromURI(this.props.url)
@@ -87,19 +78,7 @@ export default class App extends React.Component<AppProps, AppState> {
             </Tab>
           </Tabs>
         </Form>
-        <Table>
-          <tbody>
-            {this.state.repository.findAll().map(bindings => {
-              return (
-                <tr key={bindings.getID()}>
-                  {bindings.map((key: string, value: string) => {
-                    return (<td key={key}>${key} => {value}</td>)
-                  })}
-                </tr>
-              )
-            })}
-          </tbody>
-        </Table>
+        <ResultsTable repository={this.state.repository} updateThreshold={UPDATE_THRESHOLD}></ResultsTable>
       </div>
     );
   }
