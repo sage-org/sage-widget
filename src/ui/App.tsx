@@ -28,6 +28,10 @@ import DatasetFactory from '../void/dataset-factory'
 import BindingsRepository from '../sparql/bindings-repo'
 import QueryConfiguration from '../sparql/query-config'
 
+import Container from 'react-bootstrap/Container'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+
 import Form from 'react-bootstrap/Form'
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'
@@ -69,20 +73,26 @@ export default class App extends React.Component<AppProps, AppState> {
 
   render () {
     return (
-      <div className="SparqlEditor">
-        <Form>
-          <DatasetMenu dataset={this.state.dataset} queryConfig={this.state.queryConfig}></DatasetMenu>
-          <Tabs id="query-menu">
-            <Tab eventKey="sparqlMode" title="SPARQL">
-              <p><strong>Write your own SPARQL query!</strong></p>
-            </Tab>
-            <Tab eventKey="graphqlMode" title="GraphQL">
-              GraphQL
-            </Tab>
-          </Tabs>
-        </Form>
-        <ResultsTable repository={this.state.repository} updateThreshold={UPDATE_THRESHOLD}></ResultsTable>
-      </div>
+      <Container className="SparqlEditor" fluid>
+        <Row>
+          <Col>
+            <Form>
+              <DatasetMenu dataset={this.state.dataset} queryConfig={this.state.queryConfig}></DatasetMenu>
+              <Tabs id="query-menu">
+                <Tab eventKey="sparqlMode" title="SPARQL">
+                  <p><strong>Write your own SPARQL query!</strong></p>
+                </Tab>
+                <Tab eventKey="graphqlMode" title="GraphQL">
+                  GraphQL
+                </Tab>
+              </Tabs>
+            </Form>
+          </Col>
+          <Col>
+            <ResultsTable repository={this.state.repository} updateThreshold={UPDATE_THRESHOLD}></ResultsTable>
+          </Col>
+        </Row>
+      </Container>
     );
   }
 }

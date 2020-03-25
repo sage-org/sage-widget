@@ -1,4 +1,4 @@
-/* file: dataset-menu.tsx
+/* file: query-menu.tsx
 MIT License
 
 Copyright (c) 2019-2020 Thomas Minier
@@ -26,44 +26,39 @@ import React from 'react'
 import Dataset from '../void/dataset'
 import QueryConfiguration from '../sparql/query-config'
 
-import FormControl from 'react-bootstrap/FormControl'
-import InputGroup from 'react-bootstrap/InputGroup'
+import Modal from 'react-bootstrap/Modal'
 
-interface DatasetMenuProps {
+interface QueryMenyProps {
   dataset: Dataset | null,
   queryConfig: QueryConfiguration
 }
 
-/**
-* The menu used to select a RDF Graph in the dataset
-* @author Thomas Minier
-*/
-export default class DatasetMenu extends React.Component<DatasetMenuProps, {}> {
+interface QueryMenuState {
+  showModal: boolean
+}
 
-  /**
-   * Method called when the form is updated, i.e., a default RDF graph has been selected
-   * @param event 
-   */
-  onGraphSelection (event: React.FormEvent<HTMLInputElement>) {
-    const url = event.currentTarget.value
-    if (url !== "") {
-      this.props.queryConfig.defaultGraph = event.currentTarget.value
+export default class QueryMenu extends React.Component<QueryMenyProps, QueryMenuState> {
+  constructor (props: QueryMenyProps) {
+    super(props)
+    this.state = {
+      showModal: false
     }
+  }
+
+  onModalHide () {
+    this.setState({ showModal: false })
   }
 
   render () {
     return (
-      <InputGroup className="mb-3">
-        <InputGroup.Prepend>
-          <InputGroup.Text><strong>Select a RDF Graph:</strong></InputGroup.Text>
-        </InputGroup.Prepend>
-        <FormControl id="serverInput" as="select" onChange={this.onGraphSelection.bind(this)}>
-          <option value=""></option>
-          {this.props.dataset?.graphs.map(graph => {
-            return (<option value={graph.url} key={graph.url}>{graph.name}</option>)
-          })}
-        </FormControl>
-      </InputGroup>
+      <Modal show={this.state.showModal} onHide={this.onModalHide}>
+        <Modal.Header closeButton>
+          <Modal.Title>Select a preset SPARQL query</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          
+        </Modal.Body>
+      </Modal>
     )
   }
-} 
+}
