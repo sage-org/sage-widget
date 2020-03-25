@@ -1,4 +1,4 @@
-/* file: dataset-menu.tsx
+/* file: bindings.tsx
 MIT License
 
 Copyright (c) 2019-2020 Thomas Minier
@@ -22,39 +22,41 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import React from 'react'
-import Dataset from '../void/dataset'
+import Entity from '../core/entity'
 
-import FormControl from 'react-bootstrap/FormControl'
-import InputGroup from 'react-bootstrap/InputGroup'
+export default class Bindings extends Entity {
+  private _content: Map<string, string>
 
-interface DatasetMenuProps {
-  dataset: Dataset | null
+  constructor () {
+    super()
+    this._content = new Map()
+  }
+
+  get variables (): string[] {
+    return Array.from(this._content.keys())
+  }
+
+  get (key: string): string | undefined {
+    return this._content.get(key)
+  }
+
+  set (key: string, term: string): void {
+    this._content.set(key, term)
+  }
+
+  has (key: string): boolean {
+    return this._content.has(key)
+  }
+
+  map<T> (mapper: (key: string, value: string) => T): T[] {
+    const res: T[] = []
+    this._content.forEach((value: string, key: string) => res.push(mapper(key, value)))
+    return res
+  }
+
+  toString (): string {
+    let res = '{'
+    this._content.forEach((value: string, key: string) => res += `${key}->${value},`)
+    return res + '}'
+  }
 }
-
-/**
-* The menu used to select a RDF Graph in the dataset
-* @author Thomas Minier
-*/
-export default class DatasetMenu extends React.Component<DatasetMenuProps, {}> {
-
-  onGraphSelection (event: React.FormEvent<HTMLInputElement>) {
-    console.log(event.currentTarget.value);
-  }
-
-  render () {
-    return (
-      <InputGroup className="mb-3">
-        <InputGroup.Prepend>
-          <InputGroup.Text><strong>Select a RDF Graph:</strong></InputGroup.Text>
-        </InputGroup.Prepend>
-        <FormControl id="serverInput" as="select" onChange={this.onGraphSelection}>
-          <option value=""></option>
-          {this.props.dataset?.graphs.map(graph => {
-            return (<option value={graph.url} key={graph.url}>{graph.name}</option>)
-          })}
-        </FormControl>
-      </InputGroup>
-    )
-  }
-} 

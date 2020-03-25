@@ -1,4 +1,4 @@
-/* file: dataset-menu.tsx
+/* file: entity.tsx
 MIT License
 
 Copyright (c) 2019-2020 Thomas Minier
@@ -22,39 +22,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import React from 'react'
-import Dataset from '../void/dataset'
-
-import FormControl from 'react-bootstrap/FormControl'
-import InputGroup from 'react-bootstrap/InputGroup'
-
-interface DatasetMenuProps {
-  dataset: Dataset | null
-}
+import uuid from 'uuid/v4'
 
 /**
-* The menu used to select a RDF Graph in the dataset
-* @author Thomas Minier
-*/
-export default class DatasetMenu extends React.Component<DatasetMenuProps, {}> {
+ * An entity in the domain
+ * @author Thomas Minier
+ */
+export default abstract class Entity {
+  private _id: string
 
-  onGraphSelection (event: React.FormEvent<HTMLInputElement>) {
-    console.log(event.currentTarget.value);
+  constructor () {
+    this._id = uuid()
   }
 
-  render () {
-    return (
-      <InputGroup className="mb-3">
-        <InputGroup.Prepend>
-          <InputGroup.Text><strong>Select a RDF Graph:</strong></InputGroup.Text>
-        </InputGroup.Prepend>
-        <FormControl id="serverInput" as="select" onChange={this.onGraphSelection}>
-          <option value=""></option>
-          {this.props.dataset?.graphs.map(graph => {
-            return (<option value={graph.url} key={graph.url}>{graph.name}</option>)
-          })}
-        </FormControl>
-      </InputGroup>
-    )
+  /**
+   * Get an unique ID representing the entity
+   * @return An unique identifier
+   */
+  getID (): string {
+    return this._id
   }
-} 
+
+  /**
+   * Get a string serialization of the entity
+   * @return The entity serialized as a string
+   */
+  abstract toString (): string
+
+  /**
+   * Test if two entities are equals
+   * @param other - Entity to compare with
+   * @return True if the two entities are equals, False otherwise
+   */
+  equals (other: Entity): boolean {
+    return this.getID() === other.getID()
+  }
+}

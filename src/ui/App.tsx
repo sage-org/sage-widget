@@ -25,10 +25,12 @@ SOFTWARE.
 import React from 'react'
 import Dataset from '../void/dataset'
 import DatasetFactory from '../void/dataset-factory'
+import BindingsRepository from '../sparql/bindings-repo'
 
 import Form from 'react-bootstrap/Form'
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'
+import Table from 'react-bootstrap/Table'
 
 import DatasetMenu from './dataset-menu'
 
@@ -40,18 +42,32 @@ interface AppProps {
 }
 
 interface AppState {
-  dataset: Dataset | null
+  dataset: Dataset | null,
+  repository: BindingsRepository
 }
 
 export default class App extends React.Component<AppProps, AppState> {
   constructor (props: AppProps) {
     super(props)
     this.state = {
-      dataset: null
+      dataset: null,
+      repository: new BindingsRepository()
     }
   }
 
   componentDidMount () {
+    let counter = 0
+    const THRESHOLD = 5
+    // listen for repo. update, and redraw every THRESHOLD insertions
+    this.state.repository.onAdd(() => {
+      counter++
+      if (counter > THRESHOLD) {
+        this.forceUpdate()
+        counter = 0
+      }
+    })
+
+    // initialize the RDF dataset form the VoID URL
     const factory = new DatasetFactory()
     factory.fromURI(this.props.url)
       .then(dataset => this.setState({ dataset }))
@@ -71,6 +87,19 @@ export default class App extends React.Component<AppProps, AppState> {
             </Tab>
           </Tabs>
         </Form>
+        <Table>
+          <tbody>
+            {this.state.repository.findAll().map(bindings => {
+              return (
+                <tr key={bindings.getID()}>
+                  {bindings.map((key: string, value: string) => {
+                    return (<td key={key}>${key} => {value}</td>)
+                  })}
+                </tr>
+              )
+            })}
+          </tbody>
+        </Table>
       </div>
     );
   }
