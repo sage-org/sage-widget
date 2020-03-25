@@ -24,12 +24,14 @@ SOFTWARE.
 
 import React from 'react'
 import Dataset from '../void/dataset'
+import QueryConfiguration from '../sparql/query-config'
 
 import FormControl from 'react-bootstrap/FormControl'
 import InputGroup from 'react-bootstrap/InputGroup'
 
 interface DatasetMenuProps {
-  dataset: Dataset | null
+  dataset: Dataset | null,
+  queryConfig: QueryConfiguration
 }
 
 /**
@@ -38,8 +40,15 @@ interface DatasetMenuProps {
 */
 export default class DatasetMenu extends React.Component<DatasetMenuProps, {}> {
 
+  /**
+   * Method called when the form is updated, i.e., a default RDF graph has been selected
+   * @param event 
+   */
   onGraphSelection (event: React.FormEvent<HTMLInputElement>) {
-    console.log(event.currentTarget.value);
+    const url = event.currentTarget.value
+    if (url !== "") {
+      this.props.queryConfig.defaultGraph = event.currentTarget.value
+    }
   }
 
   render () {

@@ -26,6 +26,7 @@ import React from 'react'
 import Dataset from '../void/dataset'
 import DatasetFactory from '../void/dataset-factory'
 import BindingsRepository from '../sparql/bindings-repo'
+import QueryConfiguration from '../sparql/query-config'
 
 import Form from 'react-bootstrap/Form'
 import Tab from 'react-bootstrap/Tab'
@@ -43,7 +44,8 @@ interface AppProps {
 
 interface AppState {
   dataset: Dataset | null,
-  repository: BindingsRepository
+  repository: BindingsRepository,
+  queryConfig: QueryConfiguration
 }
 
 const UPDATE_THRESHOLD = 15
@@ -53,7 +55,8 @@ export default class App extends React.Component<AppProps, AppState> {
     super(props)
     this.state = {
       dataset: null,
-      repository: new BindingsRepository()
+      repository: new BindingsRepository(),
+      queryConfig: new QueryConfiguration()
     }
   }
 
@@ -68,7 +71,7 @@ export default class App extends React.Component<AppProps, AppState> {
     return (
       <div className="SparqlEditor">
         <Form>
-          <DatasetMenu dataset={this.state.dataset}></DatasetMenu>
+          <DatasetMenu dataset={this.state.dataset} queryConfig={this.state.queryConfig}></DatasetMenu>
           <Tabs id="query-menu">
             <Tab eventKey="sparqlMode" title="SPARQL">
               <p><strong>Write your own SPARQL query!</strong></p>
