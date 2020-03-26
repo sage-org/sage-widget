@@ -37,6 +37,7 @@ import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'
 
 import DatasetMenu from './dataset-menu'
+import QueryMenu from './query-menu'
 import ResultsTable from './results-table'
 
 import './App.css'
@@ -78,6 +79,7 @@ export default class App extends React.Component<AppProps, AppState> {
           <Col>
             <Form>
               <DatasetMenu dataset={this.state.dataset} queryConfig={this.state.queryConfig}></DatasetMenu>
+              <QueryMenu dataset={this.state.dataset} queryConfig={this.state.queryConfig}></QueryMenu>
               <Tabs id="query-menu">
                 <Tab eventKey="sparqlMode" title="SPARQL">
                   <p><strong>Write your own SPARQL query!</strong></p>

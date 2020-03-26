@@ -1,4 +1,4 @@
-/* file: graph.ts
+/* file: factory.tsx
 MIT License
 
 Copyright (c) 2019-2020 Thomas Minier
@@ -22,54 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import PresetQuery from './preset-query'
+import { VoIDEntity } from './void-entities'
 
 /**
- * A RDF Graph, as found in a VOID file
+ * The interface of a factory that build objects from VoID files
  * @author Thomas Minier
  */
-export default class Graph {
-  private _name: string
-  private _description: string
-  private _url: string
-  private _presetQueries: PresetQuery[]
-
-  constructor (name: string, description: string, url: string) {
-    this._name = name
-    this._description = description
-    this._url = url
-    this._presetQueries = []
-  }
-
-  /**
-   * The name of the RDF Graph
-   */
-  get name (): string {
-    return this._name
-  }
-
-  /**
-   * The description of the RDF Graph
-   */
-  get description (): string {
-    return this._description
-  }
-
-  /**
-   * The URL/URI of the RDF Graph
-   */
-  get url (): string {
-    return this._url
-  }
-
-  /**
-   * The collection of preset queries that can be executed on this graph
-   */
-  get presetQueries (): PresetQuery[] {
-    return this._presetQueries
-  }
-
-  addPresetQuery(query: PresetQuery): void {
-    this._presetQueries.push(query)
-  }
+export default interface VoidFactory<T> {
+  fromVoID (entityURI: string, entities: Map<string, VoIDEntity>): T
 }

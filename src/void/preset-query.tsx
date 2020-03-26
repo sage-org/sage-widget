@@ -1,4 +1,4 @@
-/* file: graph.ts
+/* file: preset-query.tsx
 MIT License
 
 Copyright (c) 2019-2020 Thomas Minier
@@ -22,54 +22,40 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import PresetQuery from './preset-query'
+import Entity from '../core/entity'
 
 /**
- * A RDF Graph, as found in a VOID file
+ * A preset query is a SPARQL query with a default RDF Graph provided by the VoID
+ * to illustrate the usage of a RDF dataset
  * @author Thomas Minier
  */
-export default class Graph {
+export default class PresetQuery extends Entity {
   private _name: string
-  private _description: string
-  private _url: string
-  private _presetQueries: PresetQuery[]
+  private _query: string
+  private _defaultGraph: string
 
-  constructor (name: string, description: string, url: string) {
+  constructor (name: string, query: string, defaultGraph: string) {
+    super()
     this._name = name
-    this._description = description
-    this._url = url
-    this._presetQueries = []
+    this._query = query
+    this._defaultGraph = defaultGraph
   }
 
   /**
-   * The name of the RDF Graph
+   * The SPARQL query itself
    */
-  get name (): string {
-    return this._name
+  get query (): string {
+    return this._query
   }
 
   /**
-   * The description of the RDF Graph
+   * The default RDF Graph on which the query should be executed
    */
-  get description (): string {
-    return this._description
+  get defaultGraph (): string {
+    return this._defaultGraph
   }
 
-  /**
-   * The URL/URI of the RDF Graph
-   */
-  get url (): string {
-    return this._url
-  }
-
-  /**
-   * The collection of preset queries that can be executed on this graph
-   */
-  get presetQueries (): PresetQuery[] {
-    return this._presetQueries
-  }
-
-  addPresetQuery(query: PresetQuery): void {
-    this._presetQueries.push(query)
+  toString (): string {
+    return `PresetQuery(${this._query}@<${this._defaultGraph}>)`
   }
 }

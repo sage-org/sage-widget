@@ -22,22 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+import VoidFactory from './void-factory'
 import Dataset from './dataset'
 import Graph from './graph'
 import { VoIDEntity, VoIDDataset, VoIDGraph, VoIDGraphList } from './void-entities'
 import HTTPClient from '../http/http-client'
+import GraphFactory from './graph-factory'
 
 const DC_TITLE = 'http://purl.org/dc/terms/title'
 const SS_AVAILABLE_GRAPHS = 'http://www.w3.org/ns/sparql-service-description#availableGraphs'
 const SS_NAMED_GRAPHS = 'http://www.w3.org/ns/sparql-service-description#namedGraph'
-const SS_NAME = 'http://www.w3.org/ns/sparql-service-description#name'
-const SS_GRAPH = 'http://www.w3.org/ns/sparql-service-description#graph'
 
 /**
- * A Factory used to build Dataset from VoID files
+ * A Factory used to build RDF Datasets from VoID files
  * @author Thomas Minier
  */
-export default class DatasetFactory {
+export default class DatasetFactory implements VoidFactory<Dataset> {
   /**
    * Build a RDF Dataset by dereferencing a VoID file
    * @param url - URL of the VoID file
@@ -45,38 +45,46 @@ export default class DatasetFactory {
    */
   async fromURI (url: string): Promise<Dataset> {
     const response = await HTTPClient.fetchJSON<VoIDEntity[]>(url)
-
-    const entities = new Map<string, any>()
-    response.forEach((entity: any) => {
+    const entities = new Map<string, VoIDEntity>()
+    response.forEach((entity: VoIDEntity) => {
       entities.set(entity['@id'], entity)
     })
+    return this.fromVoID(url, entities)
+  }
 
-    let datasetURI: string = url
-    if (url.endsWith('/void')) {
-      datasetURI = url.substring(0, url.length - 5)
-    } else if (url.endsWith('/void/')) {
-      datasetURI = url.substring(0, url.length - 6)
+  /**
+   * Build a RDF Dataset from the content of a VoID file
+   * @param entityURI - URI of the RDF dataset in the VoID file
+   * @param entities - Content of the VoID file
+   * @return A RDF Dataset built from the input VoID file
+   */
+  fromVoID (entityURI: string, entities: Map<string, VoIDEntity>): Dataset {
+    let datasetURI: string = entityURI
+    if (entityURI.endsWith('/void')) {
+      datasetURI = entityURI.substring(0, entityURI.length - 5)
+    } else if (entityURI.endsWith('/void/')) {
+      datasetURI = entityURI.substring(0, entityURI.length - 6)
     }
     if (!entities.has(datasetURI)) {
       throw new Error(`The provided URL ${datasetURI} does not match any RDF dataset in the VoID file download.`)
     }
     
-    const datasetEntity: VoIDDataset = entities.get(datasetURI)!
+    const datasetEntity: VoIDDataset = entities.get(datasetURI)! as VoIDDataset
     const dataset = new Dataset(datasetEntity[DC_TITLE][0]['@value'])
 
     const allGraphURI = datasetEntity[SS_AVAILABLE_GRAPHS][0]['@id']
     if (!entities.has(allGraphURI)) {
       throw new Error(`The RDF entity with URI <${allGraphURI}> is missing from the VoID downloaded`)
     }
-    const allGraphs: VoIDGraphList = entities.get(datasetEntity[SS_AVAILABLE_GRAPHS][0]['@id'])
+    const graphFactory = new GraphFactory()
+    const allGraphs: VoIDGraphList = entities.get(datasetEntity[SS_AVAILABLE_GRAPHS][0]['@id']) as VoIDGraphList
     allGraphs[SS_NAMED_GRAPHS]
       .filter(uri => entities.has(uri['@id']))
-      .map(uri => entities.get(uri['@id']) as VoIDGraph)
-      .forEach((graphEntity: VoIDGraph) => {
-        const graphName = graphEntity[SS_NAME][0]['@id']
-        const graphURL = graphEntity[SS_GRAPH][0]['@id']
-        const graphDescription = ''
-        dataset.addGraph(new Graph(graphName, graphDescription, graphURL))
+      .map(uri => graphFactory.fromVoID(uri['@id'], entities))
+      .forEach((graph: Graph) => {
+        dataset.addGraph(graph)
+        // const graph = graphFactory.fromVoID(graphEntity['@id'], descriptor)
+        // dataset.addGraph(new Graph(graphName, graphDescription, graphURL))
       })
     return dataset
   }
