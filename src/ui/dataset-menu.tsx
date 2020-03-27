@@ -60,7 +60,7 @@ export default class DatasetMenu extends React.Component<DatasetMenuProps, {}> {
         <FormControl id="serverInput" as="select" onChange={this.onGraphSelection.bind(this)}>
           <option value=""></option>
           {this.props.dataset?.graphs.map(graph => {
-            return (<option value={graph.url} key={graph.url}>{graph.name}</option>)
+            return (<option value={graph.url} key={graph.getID()}>{graph.name}</option>)
           })}
         </FormControl>
       </InputGroup>

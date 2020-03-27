@@ -22,19 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+import Entity from '../core/entity'
 import PresetQuery from './preset-query'
 
 /**
  * A RDF Graph, as found in a VOID file
  * @author Thomas Minier
  */
-export default class Graph {
+export default class Graph extends Entity {
   private _name: string
   private _description: string
   private _url: string
   private _presetQueries: PresetQuery[]
 
   constructor (name: string, description: string, url: string) {
+    super()
     this._name = name
     this._description = description
     this._url = url
@@ -71,5 +73,9 @@ export default class Graph {
 
   addPresetQuery(query: PresetQuery): void {
     this._presetQueries.push(query)
+  }
+
+  toString(): string {
+    return `Graph<${this._url}>`
   }
 }
