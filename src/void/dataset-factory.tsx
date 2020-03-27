@@ -25,13 +25,14 @@ SOFTWARE.
 import VoidFactory from './void-factory'
 import Dataset from './dataset'
 import Graph from './graph'
-import { VoIDEntity, VoIDDataset, VoIDGraph, VoIDGraphList } from './void-entities'
+import { VoIDEntity, VoIDDataset, VoIDGraphList, VoIDGraphNode } from './void-entities'
 import HTTPClient from '../http/http-client'
 import GraphFactory from './graph-factory'
 
 const DC_TITLE = 'http://purl.org/dc/terms/title'
 const SS_AVAILABLE_GRAPHS = 'http://www.w3.org/ns/sparql-service-description#availableGraphs'
 const SS_NAMED_GRAPHS = 'http://www.w3.org/ns/sparql-service-description#namedGraph'
+const SS_GRAPH = 'http://www.w3.org/ns/sparql-service-description#graph'
 
 /**
  * A Factory used to build RDF Datasets from VoID files
@@ -71,7 +72,7 @@ export default class DatasetFactory implements VoidFactory<Dataset> {
     
     const datasetEntity: VoIDDataset = entities.get(datasetURI)! as VoIDDataset
     const dataset = new Dataset(datasetEntity[DC_TITLE][0]['@value'])
-
+    // build the collection of graphs
     const allGraphURI = datasetEntity[SS_AVAILABLE_GRAPHS][0]['@id']
     if (!entities.has(allGraphURI)) {
       throw new Error(`The RDF entity with URI <${allGraphURI}> is missing from the VoID downloaded`)
@@ -80,11 +81,14 @@ export default class DatasetFactory implements VoidFactory<Dataset> {
     const allGraphs: VoIDGraphList = entities.get(datasetEntity[SS_AVAILABLE_GRAPHS][0]['@id']) as VoIDGraphList
     allGraphs[SS_NAMED_GRAPHS]
       .filter(uri => entities.has(uri['@id']))
+      .map(uri => {
+        const g = entities.get(uri['@id'])! as VoIDGraphNode
+        return g[SS_GRAPH][0]
+      })
       .map(uri => graphFactory.fromVoID(uri['@id'], entities))
       .forEach((graph: Graph) => {
+        // register the graph in the dataset
         dataset.addGraph(graph)
-        // const graph = graphFactory.fromVoID(graphEntity['@id'], descriptor)
-        // dataset.addGraph(new Graph(graphName, graphDescription, graphURL))
       })
     return dataset
   }

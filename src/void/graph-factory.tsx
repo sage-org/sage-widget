@@ -24,10 +24,15 @@ SOFTWARE.
 
 import VoidFactory from './void-factory'
 import Graph from './graph'
-import { VoIDEntity, VoIDGraph } from './void-entities'
+import PresetQuery from './preset-query'
+import { VoIDEntity, VoIDGraph, VoIDPresetQuery } from './void-entities'
 
-const SS_NAME = 'http://www.w3.org/ns/sparql-service-description#name'
-const SS_GRAPH = 'http://www.w3.org/ns/sparql-service-description#graph'
+const DC_DESCRIPTION = 'http://purl.org/dc/terms/description'
+const DC_TITLE = 'http://purl.org/dc/terms/title'
+const HYDRA_ENTRYPOINT = 'http://www.w3.org/ns/hydra/core#entrypoint'
+const RDF_LABEL = 'http://www.w3.org/2000/01/rdf-schema#label'
+const RDFS_VALUE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#value'
+const SAGE_EXAMPLE_QUERY = 'http://sage.univ-nantes.fr/sage-voc#hasExampleQuery'
 
 /**
  * A Factory used to build RDF Graphs from VoID files
@@ -42,10 +47,22 @@ export default class GraphFactory implements VoidFactory<Graph> {
    */
   fromVoID (entityURI: string, entities: Map<string, VoIDEntity>): Graph {
     const graphEntity = entities.get(entityURI) as VoIDGraph
-    const graphName = graphEntity[SS_NAME][0]['@id']
-    const graphURL = graphEntity[SS_GRAPH][0]['@id']
-    const graphDescription = ''
+    const graphName = graphEntity[DC_TITLE][0]['@value']
+    const graphURL = graphEntity[HYDRA_ENTRYPOINT][0]['@id']
+    const graphDescription = graphEntity[DC_DESCRIPTION][0]['@value']
     const graph = new Graph(graphName, graphURL, graphDescription)
+    
+    // build preset queries for this graph
+    if (SAGE_EXAMPLE_QUERY in graphEntity) {
+      graphEntity[SAGE_EXAMPLE_QUERY]!
+        .filter(uri => entities.has(uri['@id']))
+        .map(uri => entities.get(uri['@id']) as VoIDPresetQuery)
+        .forEach((presetQuery: VoIDPresetQuery) => {
+          const queryName = presetQuery[RDF_LABEL][0]['@value']
+          const queryValue = presetQuery[RDFS_VALUE][0]['@value']
+          graph.addPresetQuery(new PresetQuery(queryName, queryValue, graph.url))
+        })
+    }
     return graph
   }
 }

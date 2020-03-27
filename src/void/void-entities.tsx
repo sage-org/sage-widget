@@ -66,10 +66,37 @@ export interface VoIDGraphList extends VoIDEntity {
 }
 
 /**
+ * An intermediary node in the SPARQL service description language
+ * @author Thomas Minier
+ */
+export interface VoIDGraphNode extends VoIDEntity {
+  "http://www.w3.org/ns/sparql-service-description#name": URI[],
+  "http://www.w3.org/ns/sparql-service-description#graph": URI[],
+}
+
+/**
  * A RDF Graph in a VoID file, in JSON-LD format
  * @author Thomas Minier
  */
 export interface VoIDGraph extends VoIDEntity {
-  "http://www.w3.org/ns/sparql-service-description#name": URI[],
-  "http://www.w3.org/ns/sparql-service-description#graph": URI[]
+  "http://purl.org/dc/terms/description": Literal[],
+  "http://purl.org/dc/terms/title": Literal[],
+  "http://rdfs.org/ns/void#distinctObjects": Literal[],
+  "http://rdfs.org/ns/void#distinctSubjects": Literal[],
+  "http://rdfs.org/ns/void#feature": Literal[],
+  "http://rdfs.org/ns/void#properties": Literal[],
+  "http://rdfs.org/ns/void#triples": Literal[],
+  "http://sage.univ-nantes.fr/sage-voc#hasExampleQuery"?: URI[],
+  "http://sage.univ-nantes.fr/sage-voc#quota": Literal[],
+  "http://www.w3.org/ns/hydra/core#entrypoint": URI[],
+  "http://www.w3.org/ns/hydra/core#itemsPerPage": Literal[],
+  "http://www.w3.org/ns/sparql-service-description#endpoint": URI[],
+  "http://xmlns.com/foaf/0.1/homepage": URI[]
+}
+
+export interface VoIDPresetQuery extends VoIDEntity {
+  'http://www.w3.org/ns/hydra/core#entrypoint': URI[],
+  'http://purl.org/dc/terms/title': Literal[],
+  'http://www.w3.org/2000/01/rdf-schema#label': Literal[],
+  'http://www.w3.org/1999/02/22-rdf-syntax-ns#value': Literal[]
 }
