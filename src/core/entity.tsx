@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import uuid from 'uuid/v4'
+import { v4 as uuid } from 'uuid'
 
 /**
  * An entity in the domain
