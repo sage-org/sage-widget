@@ -24,7 +24,7 @@ SOFTWARE.
 
 import React from 'react'
 import Dataset from '../void/dataset'
-import DatasetFactory from '../void/dataset-factory'
+import JsonLDDatasetFactory from '../void/jsonld-dataset-factory'
 import BindingsRepository from '../sparql/bindings-repo'
 import QueryConfiguration from '../sparql/query-config'
 
@@ -67,7 +67,7 @@ export default class App extends React.Component<AppProps, AppState> {
 
   componentDidMount () {
     // initialize the RDF dataset form the VoID URL
-    const factory = new DatasetFactory()
+    const factory = new JsonLDDatasetFactory()
     factory.fromURI(this.props.url)
       .then(dataset => this.setState({ dataset }))
   }

@@ -24,9 +24,13 @@ SOFTWARE.
 
 import React from 'react'
 import Dataset from '../void/dataset'
+import PresetQuery from '../void/preset-query'
 import QueryConfiguration from '../sparql/query-config'
 
+import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
+import FormControl from 'react-bootstrap/FormControl'
+import InputGroup from 'react-bootstrap/InputGroup'
 
 interface QueryMenyProps {
   dataset: Dataset | null,
@@ -34,31 +38,55 @@ interface QueryMenyProps {
 }
 
 interface QueryMenuState {
-  showModal: boolean
+  showModal: boolean,
+  selectedPresetQuery: PresetQuery | null
 }
 
 export default class QueryMenu extends React.Component<QueryMenyProps, QueryMenuState> {
   constructor (props: QueryMenyProps) {
     super(props)
     this.state = {
-      showModal: false
+      showModal: false,
+      selectedPresetQuery: null
     }
   }
 
-  onModalHide () {
+  showModal () {
+    this.setState({ showModal: true })
+  }
+
+  hideModal () {
     this.setState({ showModal: false })
   }
 
+
+
   render () {
     return (
-      <Modal show={this.state.showModal} onHide={this.onModalHide}>
-        <Modal.Header closeButton>
-          <Modal.Title>Select a preset SPARQL query</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          
-        </Modal.Body>
-      </Modal>
+      <div>
+        {/* Modal used to show queries */}
+        <Modal show={this.state.showModal} onHide={this.hideModal.bind(this)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Select a preset SPARQL query</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            
+          </Modal.Body>
+        </Modal>
+        {/* Query selection menu */}
+        <InputGroup className="mb-3">
+          <InputGroup.Prepend>
+            <InputGroup.Text>
+              <Button onClick={this.showModal.bind(this)}>
+                <strong>Select a preset SPARQL query:</strong>
+              </Button>
+            </InputGroup.Text>
+          </InputGroup.Prepend>
+          <FormControl id="queryName">
+            {/* <FormControl disabled placeholder={this.state.selectedPresetQuery?.query} /> */}
+          </FormControl>
+        </InputGroup>
+      </div>
     )
   }
 }
