@@ -27,10 +27,16 @@ import Dataset from '../void/dataset'
 import PresetQuery from '../void/preset-query'
 import QueryConfiguration from '../sparql/query-config'
 
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+
+import Accordion from 'react-bootstrap/Accordion'
 import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
 import FormControl from 'react-bootstrap/FormControl'
 import InputGroup from 'react-bootstrap/InputGroup'
+import Tab from 'react-bootstrap/Tab'
+import Tabs from 'react-bootstrap/Tabs'
 
 interface QueryMenyProps {
   dataset: Dataset | null,
@@ -59,33 +65,71 @@ export default class QueryMenu extends React.Component<QueryMenyProps, QueryMenu
     this.setState({ showModal: false })
   }
 
-
+  selectQuery(query: PresetQuery) {
+    this.setState({ selectedPresetQuery: query })
+    this.props.queryConfig.sparqlQuery = query.query
+  }
 
   render () {
     return (
       <div>
         {/* Modal used to show queries */}
-        <Modal show={this.state.showModal} onHide={this.hideModal.bind(this)}>
+        <Modal size="lg" show={this.state.showModal} onHide={this.hideModal.bind(this)}>
           <Modal.Header closeButton>
             <Modal.Title>Select a preset SPARQL query</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            
+            <Tabs variant="pills" justify id="queryPerGraph">
+              {this.props.dataset?.graphs
+                .filter(graph => graph.presetQueries.length > 0)
+                .sort()
+                .map(graph => (
+                  <Tab eventKey={`${graph.getID()}Tab`} title={graph.name} key={graph.getID()}>
+                    {graph.presetQueries.sort().map(query => (
+                      <Accordion>
+                        <Row>
+                          <Col md="8">
+                            <p key={query.getID()}>
+                              <strong>{query.name}</strong>
+                            </p>
+                          </Col>
+                          <Col md="4">
+                            <Accordion.Toggle as={Button} eventKey={`showQuery${query.getID()}`}>
+                              Show query
+                            </Accordion.Toggle>
+                            <em> </em>
+                            <Button variant="success" onClick={() => this.selectQuery(query)}>
+                              Use
+                            </Button>
+                          </Col>
+                        </Row>
+                        <Row>
+                          <Col>
+                            <Accordion.Collapse eventKey={`showQuery${query.getID()}`}>
+                              <pre><code>{query.query}</code></pre>
+                            </Accordion.Collapse>
+                          </Col>
+                        </Row>
+                      </Accordion>
+                    ))}
+                  </Tab>
+              ))}
+            </Tabs>
           </Modal.Body>
         </Modal>
         {/* Query selection menu */}
-        <InputGroup className="mb-3">
-          <InputGroup.Prepend>
-            <InputGroup.Text>
-              <Button onClick={this.showModal.bind(this)}>
-                <strong>Select a preset SPARQL query:</strong>
-              </Button>
-            </InputGroup.Text>
-          </InputGroup.Prepend>
-          <FormControl id="queryName">
-            {/* <FormControl disabled placeholder={this.state.selectedPresetQuery?.query} /> */}
-          </FormControl>
-        </InputGroup>
+        <Row>
+          <Col md="4">
+            <Button onClick={this.showModal.bind(this)}>
+              <strong>Select a preset query:</strong>
+            </Button>
+          </Col>
+          <Col md="8">
+            {this.state.selectedPresetQuery !== null && (
+              <p>{this.state.selectedPresetQuery.name}</p>
+            )}
+          </Col>
+        </Row>
       </div>
     )
   }

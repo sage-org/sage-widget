@@ -42,6 +42,13 @@ export default class PresetQuery extends Entity {
   }
 
   /**
+   * The name of the query
+   */
+  get name (): string {
+    return this._name
+  }
+
+  /**
    * The SPARQL query itself
    */
   get query (): string {
