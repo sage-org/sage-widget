@@ -31,7 +31,7 @@
     "codeflask": "^1.4.0",
     "graphql-to-sparql": "^1.4.1",
     "mithril": "^1.1.6",
-    "protobufjs": "^6.8.8",
+    "protobufjs": "^7.2.4",
     "sage-client": "^2.1.1",
     "yasgui-yasqe": "^2.11.22"
   },
